@@ -317,6 +317,11 @@ public final class System {
                                                        &coreCurrences,
                                                        coreCurrences.count)
     }
+    
+    public func requestSync(system: System, manager: WalletManager) {
+        cryptoSystemCreateSync (core,
+                                manager.core)
+    }
 
     ///
     /// Remove (aka 'wipe') the persistent storage associated with `network` at `path`.  This should
@@ -1584,6 +1589,26 @@ extension System {
                         failure: { (e) in
                             print ("SYS: GetBlockNumber: Error: \(e)")
                             cryptoClientAnnounceBlockNumber (cwm, sid, CRYPTO_FALSE, 0, nil)
+                        })
+                }},
+            
+            funcGetBlockNumberSubscribe: { (context, cwm, sid) in
+                precondition (nil != context  && nil != cwm)
+
+                guard let (_, manager) = System.systemExtract (context, cwm)
+                else { System.cleanup("SYS: GetBlockNumber: Missed {cwm}", cwm: cwm); return }
+                print ("SYS: GetBlockNumber")
+
+                manager.client.getBlockchain (blockchainId: manager.network.uids) {
+                    (res: Result<SystemClient.Blockchain, SystemClientError>) in
+                    defer { cryptoWalletManagerGive (cwm!) }
+                    res.resolve (
+                        success: {
+                            cryptoClientSubscribeBlockNumber (cwm, sid, CRYPTO_TRUE,  $0.blockHeight ?? 0, $0.verifiedBlockHash)
+                        },
+                        failure: { (e) in
+                            print ("SYS: GetBlockNumber: Error: \(e)")
+                            cryptoClientSubscribeBlockNumber (cwm, sid, CRYPTO_FALSE, 0, nil)
                         })
                 }},
 
