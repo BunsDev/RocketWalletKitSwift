@@ -544,7 +544,7 @@ public struct TransferOutput {
 ///
 /// Listener for TransferEvent
 ///
-public protocol TransferListener: class {
+public protocol TransferListener: AnyObject {
     ///
     /// Handle a TranferEvent.
     ///

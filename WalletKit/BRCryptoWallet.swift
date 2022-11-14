@@ -786,7 +786,7 @@ extension WalletEvent: CustomStringConvertible {
 ///
 /// Listener for WalletEvent
 ///
-public protocol WalletListener: class {
+public protocol WalletListener: AnyObject {
     ///
     /// Handle a WalletEvent
     ///
