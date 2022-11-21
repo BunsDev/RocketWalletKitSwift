@@ -5,8 +5,7 @@ import PackageDescription
 let package = Package(
     name: "WalletKit",
     platforms: [
-        .iOS(.v11),
-        .macOS(.v11)
+        .iOS(.v11)
     ],
     products: [
         .library(
@@ -16,7 +15,7 @@ let package = Package(
     ],
 
     dependencies: [
-        .package(name: "WalletKitCore", url: "https://github.com/rockwalletcode/WalletKitCore.git", .revision("2ae85d2de7d4af7553c68bb8d3f588e48e004a9b"))
+        .package(name: "WalletKitCore", url: "https://github.com/rockwalletcode/WalletKitCore.git", .exact("5.0.2"))
     ],
 
     targets: [
