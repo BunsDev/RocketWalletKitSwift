@@ -1714,7 +1714,7 @@ extension System {
                             
                             cryptoClientAnnounceEstimateTransactionFee (cwm,
                                                                sid,
-                                                               CRYPTO_TRUE,
+                                                               CRYPTO_SUCCESS,
                                                                $0.costUnits,
                                                                metaKeysPtr.count,
                                                                &metaKeysPtr,
@@ -1723,7 +1723,21 @@ extension System {
                         },
                         failure: { (e) in
                             print ("SYS: EstimateTransactionFee: Error: \(e)")
-                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, CRYPTO_FALSE, 0, 0, nil, nil) })
+                            
+                            var status : BRCryptoStatus = CRYPTO_ERROR_FAILED
+                            
+                            switch e {
+                            case .response(_, let pairs, _):
+                                if let result = pairs,
+                                   let message = result["network_message"] as! String?,
+                                   message == "Invalid transaction." {
+                                    status = CRYPTO_ERROR_FUNDS
+                                }
+                            case .url, .submission, .noData, .jsonParse, .model, .noEntity:
+                                status = CRYPTO_ERROR_FAILED
+                            }
+                            
+                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, 0, 0, nil, nil) })
                 }}
         )
     }
