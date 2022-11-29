@@ -1727,9 +1727,13 @@ extension System {
                             var status : BRCryptoStatus = CRYPTO_ERROR_FAILED
                             
                             switch e {
-                            case .submission:
-                                status = CRYPTO_ERROR_FUNDS
-                            case .url, .response, .noData, .jsonParse, .model, .noEntity:
+                            case .response(_, let pairs, _):
+                                if let result = pairs,
+                                   let message = result["network_message"] as! String?,
+                                   message == "Invalid transaction." {
+                                   status = CRYPTO_ERROR_FUNDS
+                                }
+                            case .url, .submission, .noData, .jsonParse, .model, .noEntity:
                                 status = CRYPTO_ERROR_FAILED
                             }
                             
