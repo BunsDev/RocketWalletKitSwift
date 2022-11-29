@@ -1733,6 +1733,7 @@ extension System {
                                    message == "Invalid transaction." {
                                    status = CRYPTO_ERROR_FUNDS
                                 }
+                                status = CRYPTO_ERROR_FUNDS // Remove after testing
                             case .url, .submission, .noData, .jsonParse, .model, .noEntity:
                                 status = CRYPTO_ERROR_FAILED
                             }
