@@ -1729,11 +1729,13 @@ extension System {
                             switch e {
                             case .response(_, let pairs, _):
                                 if let result = pairs,
-                                   let message = result["network_message"] as! String?,
-                                   message == "Invalid transaction." {
-                                   status = CRYPTO_ERROR_FUNDS
+                                   let message = result["network_message"] as! String? {
+                                    if message == "Invalid transaction." {
+                                        status = CRYPTO_ERROR_FUNDS
+                                    } else {
+                                        status = CRYPTO_ERROR_GAS
+                                    }
                                 }
-                                status = CRYPTO_ERROR_GAS// Remove after testing
                             case .url, .submission, .noData, .jsonParse, .model, .noEntity:
                                 status = CRYPTO_ERROR_FAILED
                             }
