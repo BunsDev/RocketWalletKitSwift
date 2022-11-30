@@ -495,6 +495,7 @@ public final class Wallet: Equatable {
         case serviceUnavailable
         case serviceError
         case insufficientFunds
+        case insufficientGas
 
         static func fromStatus (_ status: BRCryptoStatus) -> LimitEstimationError {
             switch status {
@@ -508,6 +509,7 @@ public final class Wallet: Equatable {
             case .ServiceUnavailable: return .serviceUnavailable
             case .ServiceError:       return .serviceError
             case .InsufficientFunds:  return .insufficientFunds
+            case .InsufficientGas:  return .insufficientGas
             }
         }
     }
@@ -575,11 +577,13 @@ public final class Wallet: Equatable {
         case ServiceUnavailable
         case ServiceError
         case InsufficientFunds
+        case InsufficientGas
 
         static func fromStatus (_ status: BRCryptoStatus) -> FeeEstimationError {
             switch status {
             case CRYPTO_ERROR_FAILED: return .ServiceError
             case CRYPTO_ERROR_FUNDS: return .InsufficientFunds
+            case CRYPTO_ERROR_GAS: return .InsufficientGas
             default: return .ServiceError // preconditionFailure ("Unknown FeeEstimateError")
             }
         }
