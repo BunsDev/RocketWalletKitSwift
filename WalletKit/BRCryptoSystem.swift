@@ -1734,6 +1734,8 @@ extension System {
                                         status = CRYPTO_ERROR_FUNDS
                                     } else {
                                         status = CRYPTO_ERROR_GAS
+                                        let index = message.index(message.startIndex, offsetBy: 17)
+                                        print("\(index)")
                                     }
                                 }
                             case .url, .submission, .noData, .jsonParse, .model, .noEntity:
