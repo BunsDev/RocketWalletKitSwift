@@ -426,7 +426,10 @@ public final class NetworkFee: Equatable {
         self.core = (take ? cryptoNetworkFeeTake(core) : core)
         self.timeIntervalInMilliseconds = cryptoNetworkFeeGetConfirmationTimeInMilliseconds(core)
         self.pricePerCostFactor = Amount (core: cryptoNetworkFeeGetPricePerCostFactor (core),
-                                          take: false)
+                                          take: false) +
+        Amount (core: cryptoNetworkFeeGetPricePerCostFactor (core),
+                take: false) ?? Amount (core: cryptoNetworkFeeGetPricePerCostFactor (core),
+                                        take: false)
     }
 
     /// Initialize based on the timeInternal and pricePerCostFactor.  Used by BlockchainDB when
