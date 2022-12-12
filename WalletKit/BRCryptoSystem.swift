@@ -1735,7 +1735,7 @@ extension System {
 //                                        status = CRYPTO_ERROR_FUNDS
                                         status = CRYPTO_SUCCESS // REMOVE, this is only a test
 //                                        costUnits = 25200 // REMOVE, this is only a test
-                                        costUnits = 30000
+                                        costUnits = 38800
                                     } else {
                                         status = CRYPTO_ERROR_GAS
                                     }
