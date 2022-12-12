@@ -1725,13 +1725,16 @@ extension System {
                             print ("SYS: EstimateTransactionFee: Error: \(e)")
                             
                             var status : BRCryptoStatus = CRYPTO_ERROR_FAILED
+                            var costUnits : UInt64 = 0
                             
                             switch e {
                             case .response(_, let pairs, _):
                                 if let result = pairs,
                                    let message = result["network_message"] as! String? {
                                     if message == "Invalid transaction." {
-                                        status = CRYPTO_ERROR_FUNDS
+//                                        status = CRYPTO_ERROR_FUNDS
+                                        status = CRYPTO_SUCCESS // REMOVE, this is only a test
+                                        costUnits = 25200 // REMOVE, this is only a test
                                     } else {
                                         status = CRYPTO_ERROR_GAS
                                     }
@@ -1740,7 +1743,7 @@ extension System {
                                 status = CRYPTO_ERROR_FAILED
                             }
                             
-                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, 0, 0, nil, nil) })
+                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, costUnits, 0, nil, nil) })
                 }}
         )
     }
