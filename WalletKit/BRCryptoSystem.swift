@@ -1732,15 +1732,15 @@ extension System {
                                 if let result = pairs,
                                    let message = result["network_message"] as! String? {
                                     if message == "Invalid transaction." {
-//                                        status = CRYPTO_ERROR_FUNDS
-                                        status = CRYPTO_SUCCESS // REMOVE, this is only a test
-//                                        costUnits = 25200 // REMOVE, this is only a test
-                                        costUnits = 38800
+                                        status = CRYPTO_ERROR_FUNDS
                                     } else {
                                         status = CRYPTO_ERROR_GAS
                                     }
                                 }
-                            case .url, .submission, .noData, .jsonParse, .model, .noEntity:
+                            case .submission:
+                                status = CRYPTO_SUCCESS
+                                costUnits = 38800 // Provide a default value if no response
+                            case .url, .noData, .jsonParse, .model, .noEntity:
                                 status = CRYPTO_ERROR_FAILED
                             }
                             
