@@ -1660,6 +1660,13 @@ extension System {
                     defer { cryptoWalletManagerGive(cwm) }
                     res.resolve(
                         success: {
+                            var count : Int = 0
+                            for transaction in $0 {
+                                if transaction.transfers.count > 2 {
+                                    print("count: \(count)")
+                                }
+                                count = count + 1
+                            }
                             var bundles: [BRCryptoClientTransferBundle?]  = $0.flatMap { System.makeTransferBundles ($0, addresses: addresses) }
                             cryptoClientAnnounceTransfers (cwm, sid, CRYPTO_TRUE,  &bundles, bundles.count) },
                         failure: { (e) in
