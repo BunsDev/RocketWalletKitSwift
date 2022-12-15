@@ -1421,6 +1421,9 @@ extension System {
 
     private static func mergeTransfers (_ transaction: SystemClient.Transaction, with addresses: [String])
         -> [(transfer: SystemClient.Transfer, fee: SystemClient.Amount?)] {
+            if transaction.transfers.count > 2 {
+                print("Debug")
+            }
             // Only consider transfers w/ `address`
             var transfers = transaction.transfers.filter {
                 ($0.source.map { addresses.caseInsensitiveContains($0) } ?? false) ||
