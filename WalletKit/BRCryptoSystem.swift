@@ -1434,7 +1434,7 @@ extension System {
             
             if transaction.transfers.count > 2 { // Fees for smart contracts are paid by sender
                 if feeTransfer.count != 0 {
-                    for i in 0...transfers.count {
+                    for i in 0...(transfers.count - 1) {
                         transfers[i].source = feeTransfer[0].source
                     }
                 }
