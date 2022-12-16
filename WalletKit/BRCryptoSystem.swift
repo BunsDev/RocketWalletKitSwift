@@ -1421,13 +1421,23 @@ extension System {
 
     private static func mergeTransfers (_ transaction: SystemClient.Transaction, with addresses: [String])
         -> [(transfer: SystemClient.Transfer, fee: SystemClient.Amount?)] {
-            if transaction.transfers.count > 2 {
-                print("Debug")
-            }
+            
             // Only consider transfers w/ `address`
             var transfers = transaction.transfers.filter {
                 ($0.source.map { addresses.caseInsensitiveContains($0) } ?? false) ||
                     ($0.target.map { addresses.caseInsensitiveContains($0) } ?? false)
+            }
+            
+            var feeTransfer = transaction.transfers.filter {
+                ("__fee__" == $0.target)
+            }
+            
+            if transaction.transfers.count > 2 { // Fees for smart contracts are paid by sender
+                if feeTransfer.count != 0 {
+                    for i in 0...transfers.count {
+                        transfers[i].source = feeTransfer[0].source
+                    }
+                }
             }
 
             // Note for later: all transfers have a unique id
