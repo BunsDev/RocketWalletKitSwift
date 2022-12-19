@@ -1433,7 +1433,7 @@ extension System {
                     ("__fee__" == $0.target)
                 }
                 if feeTransfer.count != 0 {
-                    transfers = transfers + feeTransfer
+                    transfers = feeTransfer + transfers
 //                    for i in 0...(transfers.count - 1) {
 //                        transfers[i].source = feeTransfer[0].source
 //                    }
