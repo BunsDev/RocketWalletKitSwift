@@ -15,7 +15,7 @@ let package = Package(
     ],
 
     dependencies: [
-        .package(name: "WalletKitCore", url: "https://github.com/rockwalletcode/WalletKitCore.git", .revision("317d12bf92583f499ca638fe9b1a53338d279786"))
+        .package(name: "WalletKitCore", url: "https://github.com/rockwalletcode/WalletKitCore.git", .revision("0b68e474a39666ebb1bd8b73804ede7bcc09591e"))
     ],
 
     targets: [
