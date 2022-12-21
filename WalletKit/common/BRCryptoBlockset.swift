@@ -967,6 +967,8 @@ public class BlocksetSystemClient: SystemClient {
                                    exchangeId: String?,
                                    completion: @escaping (Result<TransactionIdentifier, SystemClientError>) -> Void) {
         let data            = transaction.base64EncodedString()
+        print("Identifier: \(identifier)")
+        print("Data: \(data)")
         var json: JSON.Dict = [
             "blockchain_id"  : blockchainId,
             "submit_context" : "WalletKit:\(blockchainId):\(identifier ?? "Data:\(String(data.prefix(20)))")",
