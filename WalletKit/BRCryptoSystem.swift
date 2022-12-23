@@ -1676,7 +1676,7 @@ extension System {
                                     print("count: \(count)")
                                 }
                                 count = count + 1
-                                let nonce: String? = transaction.metaData?["nonce"] ?? "0x0"
+                                let nonce: String = transaction.metaData?["nonce"] ?? "0x0"
                                 print("hash: \(transaction.hash) nonce: \(nonce)")
                             }
                             var bundles: [BRCryptoClientTransferBundle?]  = $0.flatMap { System.makeTransferBundles ($0, addresses: addresses) }
