@@ -1560,6 +1560,10 @@ extension System {
                 var metaValsPtr = Array(metaData.values)
                     .map { UnsafePointer<Int8>(strdup($0)) }
                 defer { metaValsPtr.forEach { cryptoMemoryFree (UnsafeMutablePointer(mutating: $0)) } }
+                
+                if (transaction.hash == "0x27436f4ff92cd08d8b94a5ae5a9cc43a76a54c519688174d7b6496618462f332" || transaction.hash == "0x66dc7aa25409b43425edb4feaefba30a6b7f3d200bbd8260386872bd066382fd") {
+                    print("Debugging")
+                }
 
                 return cryptoClientTransferBundleCreate (status,
                                                          transfer.id,
