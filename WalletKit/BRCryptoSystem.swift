@@ -1561,7 +1561,9 @@ extension System {
                     .map { UnsafePointer<Int8>(strdup($0)) }
                 defer { metaValsPtr.forEach { cryptoMemoryFree (UnsafeMutablePointer(mutating: $0)) } }
                 
-                if (transaction.hash == "0x27436f4ff92cd08d8b94a5ae5a9cc43a76a54c519688174d7b6496618462f332" || transaction.hash == "0x66dc7aa25409b43425edb4feaefba30a6b7f3d200bbd8260386872bd066382fd") {
+                if (transaction.hash == "0x27436f4ff92cd08d8b94a5ae5a9cc43a76a54c519688174d7b6496618462f332" || transaction.hash == "0x66dc7aa25409b43425edb4feaefba30a6b7f3d200bbd8260386872bd066382fd" ||
+                    transaction.hash == "0xdebded1aa8dae8ba080349945fe3d1e14eff1da0ceaf511b7b19e3e6c117cd5b" ||
+                    transaction.hash == "0xaca8ea588c82fe3404f2f2ca649d6e807167e649c9ac2baa75aed53b8c711fe8") {
                     print("Debugging")
                 }
 
