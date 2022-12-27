@@ -1737,11 +1737,13 @@ extension System {
                                         status = CRYPTO_ERROR_GAS
                                     }
                                 }
-                            case .submission:
+                            case .submission, .url, .noData, .jsonParse, .model, .noEntity:
+                                status = CRYPTO_ERROR_FAILED
+                            }
+                            
+                            if status == CRYPTO_ERROR_FAILED {
                                 status = CRYPTO_SUCCESS
                                 costUnits = 38800 // Provide a default value if no response
-                            case .url, .noData, .jsonParse, .model, .noEntity:
-                                status = CRYPTO_ERROR_FAILED
                             }
                             
                             cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, costUnits, 0, nil, nil) })
