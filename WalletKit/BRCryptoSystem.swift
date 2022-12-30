@@ -318,6 +318,25 @@ public final class System {
                                                        coreCurrences.count)
     }
     
+    public func createWalletManager (network: Network,
+                                     mode: WalletManagerMode,
+                                     addressScheme: AddressScheme,
+                                     currencies: Set<Currency>,
+                                     phrase: String) -> Bool {
+        precondition (network.supportsMode(mode))
+        precondition (network.supportsAddressScheme(addressScheme))
+
+        var coreCurrences: [BRCryptoCurrency?] = currencies.map { $0.core }
+
+        return nil != cryptoSystemCreateWalletManagerBIP44 (core,
+                                                       network.core,
+                                                       mode.core,
+                                                       addressScheme.core,
+                                                       &coreCurrences,
+                                                       coreCurrences.count,
+                                                       phrase)
+    }
+    
     public func requestSync(system: System, manager: WalletManager) {
         cryptoSystemCreateSync (core,
                                 manager.core)
