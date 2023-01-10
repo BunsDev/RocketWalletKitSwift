@@ -431,6 +431,7 @@ public final class WalletSweeper {
                                         
                                         // validate that the sweeper has the necessary info
                                         if let e = WalletSweeperError(cryptoWalletSweeperValidate(self.core)) {
+                                            print ("SYS: SweeperGetTransactions: Error: \(e)")
                                             completion(Result.failure(e))
                                             return
                                         }
