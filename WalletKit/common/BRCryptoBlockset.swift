@@ -939,9 +939,9 @@ public class BlocksetSystemClient: SystemClient {
             let queryVals = queryValsBase + addresses
 
             // Make the first request.  Ideally we'll get all the transactions in one gulp
-//            self.bdbMakeRequest (path: "transactions",
-//                                 query: zip (queryKeys, queryVals),
-//                                 completion: handleResult)
+            self.bdbMakeRequest (path: "transactions",
+                                 query: zip (queryKeys, queryVals),
+                                 completion: handleResult)
         }
     }
 

@@ -420,20 +420,21 @@ public final class WalletSweeper {
                                 (res: Result<[SystemClient.Transaction], SystemClientError>) in
                                 res.resolve(
                                     success: {
-                                        let bundles: [BRCryptoClientTransactionBundle?] = $0.map { System.makeTransactionBundle ($0) }
-                                        // populate the underlying BRCryptoWalletSweeper with BTC transaction data
-                                        for bundle in bundles {
-                                            if let e = WalletSweeperError(cryptoWalletSweeperAddTransactionFromBundle(self.core, bundle)) {
-                                                completion(Result.failure(e))
-                                                return
-                                            }
-                                        }
-                                        
-                                        // validate that the sweeper has the necessary info
-                                        if let e = WalletSweeperError(cryptoWalletSweeperValidate(self.core)) {
-                                            completion(Result.failure(e))
-                                            return
-                                        }
+//                                        let bundles: [BRCryptoClientTransactionBundle?] = $0.map { System.makeTransactionBundle ($0) }
+//                                        // populate the underlying BRCryptoWalletSweeper with BTC transaction data
+//                                        for bundle in bundles {
+//                                            if let e = WalletSweeperError(cryptoWalletSweeperAddTransactionFromBundle(self.core, bundle)) {
+//                                                completion(Result.failure(e))
+//                                                return
+//                                            }
+//                                        }
+//
+//                                        // validate that the sweeper has the necessary info
+//                                        if let e = WalletSweeperError(cryptoWalletSweeperValidate(self.core)) {
+//                                            completion(Result.failure(e))
+//                                            return
+//                                        }
+                                        completion(Result.failure(.clientError($0))
                                         
                                         // return the sweeper for use in estimation/submission
                                         completion(Result.success(self))},
