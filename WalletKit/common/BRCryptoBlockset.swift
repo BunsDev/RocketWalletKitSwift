@@ -1511,8 +1511,10 @@ public class BlocksetSystemClient: SystemClient {
                 completion (Result.failure (SystemClientError.jsonParse(jsonError)))
             }
         }
+        
+        completion (Result.failure (SystemClientError.url("URLComponents.url")))
 
-        sendRequest (request, session, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
+//        sendRequest (request, session, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
     }
 
     /// We have two flavors of bdbMakeRequest but they both handle their result identically.
