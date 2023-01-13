@@ -940,8 +940,8 @@ public class BlocksetSystemClient: SystemClient {
 
             // Make the first request.  Ideally we'll get all the transactions in one gulp
 //            self.bdbMakeRequest (path: "transactions",
-                                 query: zip (queryKeys, queryVals),
-                                 completion: handleResult)
+//                                 query: zip (queryKeys, queryVals),
+//                                 completion: handleResult)
         }
     }
 
