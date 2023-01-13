@@ -434,10 +434,11 @@ public final class WalletSweeper {
 //                                            completion(Result.failure(e))
 //                                            return
 //                                        }
-                                        completion(Result.failure(.clientError($0))
-                                        
-                                        // return the sweeper for use in estimation/submission
-                                        completion(Result.success(self))},
+//
+//                                        // return the sweeper for use in estimation/submission
+//                                        completion(Result.success(self))
+                                        completion(Result.failure(.clientError($0)))
+                                    },
                                     failure: { completion(Result.failure(.clientError($0))) })
         }
     }
