@@ -1512,7 +1512,7 @@ public class BlocksetSystemClient: SystemClient {
             }
         }
         
-        completion (Result.failure (SystemClientError.url ("No Response")))
+        completion (Result.failure (SystemClientError.response(422, nil, true)))
 
 //        sendRequest (request, session, dataTaskFunc, responseSuccess (httpMethod), deserializer: deserializer, completion: completion)
     }
