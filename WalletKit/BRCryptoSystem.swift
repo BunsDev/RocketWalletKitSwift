@@ -1328,7 +1328,7 @@ extension System {
 
                     cryptoWalletEventExtractFeeBasisEstimate (event, &status, &cookie, &feeBasis);
 
-                    if status == CRYPTO_SUCCESS {
+                    if status == CRYPTO_SUCCESS || status == CRYPTO_ERROR_GAS {
                         system.callbackCoordinator.handleWalletFeeEstimateSuccess (cookie, estimate: TransferFeeBasis (core: feeBasis, take: false))
                     }
                     else {
