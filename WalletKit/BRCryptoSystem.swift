@@ -1740,7 +1740,8 @@ extension System {
                                 status = CRYPTO_ERROR_FAILED
                             }
                             
-                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, 0, 0, nil, nil) })
+//                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, 0, 0, nil, nil) })
+                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, UInt64(25200), 0, nil, nil) })
                 }}
         )
     }
