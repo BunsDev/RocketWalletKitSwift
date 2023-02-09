@@ -1726,6 +1726,8 @@ extension System {
                             
                             var status : BRCryptoStatus = CRYPTO_ERROR_FAILED
                             
+                            var requiredAmount : UInt64 = 0
+                            
                             switch e {
                             case .response(_, let pairs, _):
                                 if let result = pairs,
@@ -1734,6 +1736,9 @@ extension System {
                                         status = CRYPTO_ERROR_FUNDS
                                     } else {
                                         status = CRYPTO_ERROR_GAS
+                                        let messageArr = message.split(separator: " ")
+                                        let requiredAmountString : String = String( messageArr.last ?? "0")
+                                        requiredAmount = UInt64(requiredAmountString) ?? 0
                                     }
                                 }
                             case .url, .submission, .noData, .jsonParse, .model, .noEntity:
@@ -1741,7 +1746,7 @@ extension System {
                             }
                             
 //                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, 0, 0, nil, nil) })
-                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, UInt64(25200), 0, nil, nil) })
+                            cryptoClientAnnounceEstimateTransactionFee (cwm, sid, status, requiredAmount, 0, nil, nil) })
                 }}
         )
     }
