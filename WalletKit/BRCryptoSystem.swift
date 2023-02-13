@@ -1683,7 +1683,7 @@ extension System {
                                     print("count: \(count)")
                                 }
                                 if count == 25 {
-                                    transactions[count].transfers.append(transactions[0].transfers[count])
+                                    transactions[count].transfers.append(transactions[0].transfers[1])
                                 }
                                 count = count + 1
                                 let nonceStr: String = transaction.metaData?["nonce"] ?? "0x0"
