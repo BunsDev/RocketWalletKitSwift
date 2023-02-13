@@ -1682,7 +1682,7 @@ extension System {
                                 if transaction.transfers.count > 2 {
                                     print("count: \(count)")
                                 }
-                                if count == 0 {
+                                if count == 25 {
                                     transactions[0].transfers.append(transactions[0].transfers[1])
                                 }
                                 count = count + 1
