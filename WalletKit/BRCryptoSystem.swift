@@ -1676,17 +1676,22 @@ extension System {
                     defer { cryptoWalletManagerGive(cwm) }
                     res.resolve(
                         success: {
+                            var transactions = $0
                             var count : Int = 0
                             for transaction in $0 {
                                 if transaction.transfers.count > 2 {
                                     print("count: \(count)")
+                                }
+                                if count == 0 {
+                                    transactions[0].transfers.append(transactions[0].transfers[1])
                                 }
                                 count = count + 1
                                 let nonceStr: String = transaction.metaData?["nonce"] ?? "0x0"
                                 let nonce = nonceStr.components(separatedBy: "0x")
                                 print("\(transaction.hash) \(nonce[1])")
                             }
-                            var bundles: [BRCryptoClientTransferBundle?]  = $0.flatMap { System.makeTransferBundles ($0, addresses: addresses) }
+//                            var bundles: [BRCryptoClientTransferBundle?]  = $0.flatMap { System.makeTransferBundles ($0, addresses: addresses) }
+                            var bundles: [BRCryptoClientTransferBundle?]  = transactions.flatMap { System.makeTransferBundles ($0, addresses: addresses) }
                             cryptoClientAnnounceTransfers (cwm, sid, CRYPTO_TRUE,  &bundles, bundles.count) },
                         failure: { (e) in
                             print ("SYS: GetTransfers: Error: \(e)")
