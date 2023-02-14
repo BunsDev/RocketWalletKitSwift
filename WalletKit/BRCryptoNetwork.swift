@@ -304,6 +304,7 @@ public enum NetworkType: CustomStringConvertible {
     case btc
     case bch
     case bsv
+    case ltc
     case eth
     case xrp
     case hbar
@@ -315,6 +316,7 @@ public enum NetworkType: CustomStringConvertible {
         case CRYPTO_NETWORK_TYPE_BTC:  self = .btc
         case CRYPTO_NETWORK_TYPE_BCH:  self = .bch
         case CRYPTO_NETWORK_TYPE_BSV:  self = .bsv
+        case CRYPTO_NETWORK_TYPE_LTC:  self = .ltc
         case CRYPTO_NETWORK_TYPE_ETH:  self = .eth
         case CRYPTO_NETWORK_TYPE_XRP:  self = .xrp
         case CRYPTO_NETWORK_TYPE_HBAR: self = .hbar
@@ -329,6 +331,7 @@ public enum NetworkType: CustomStringConvertible {
         case .btc: return CRYPTO_NETWORK_TYPE_BTC
         case .bch: return CRYPTO_NETWORK_TYPE_BCH
         case .bsv: return CRYPTO_NETWORK_TYPE_BSV
+        case .ltc: return CRYPTO_NETWORK_TYPE_LTC
         case .eth: return CRYPTO_NETWORK_TYPE_ETH
         case .xrp: return CRYPTO_NETWORK_TYPE_XRP
         case .hbar: return CRYPTO_NETWORK_TYPE_HBAR
