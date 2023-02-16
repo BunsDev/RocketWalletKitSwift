@@ -59,6 +59,9 @@ public class BlocksetSystemClient: SystemClient {
 
     /// Base URL (String) for Blockset
     let bdbBaseURL: String
+    
+    /// Base URL (String) for BRD API Services
+    let apiBaseURL: String
 
     // The session to use for DataTaskFunc as in `session.dataTask (with: request, ...)`.
     let session = URLSession (configuration: .default)
@@ -71,6 +74,9 @@ public class BlocksetSystemClient: SystemClient {
     /// uncompression of response data, redirects if requires and creates a `URLSessionDataTask`
     /// for the provided `session`.
     public typealias DataTaskFunc = (URLSession, URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask
+    
+    /// A DataTaskFunc for submission to the BRD API
+    internal let apiDataTaskFunc: DataTaskFunc
 
     /// A DataTaskFunc for submission to Blockset
     internal let bdbDataTaskFunc: DataTaskFunc
@@ -177,19 +183,32 @@ public class BlocksetSystemClient: SystemClient {
     }
 
     ///
-    /// Initialize a BlocksetSystemClient
-    ///
-    /// - Parameters:
-    ///   - session: the URLSession to use.  Defaults to `URLSession (configuration: .default)`
-    ///   - bdbBaseURL: the baseURL for Blockset.  Defaults to "http://api.blockset.com"
-    ///   - bdbDataTaskFunc: an optional DataTaskFunc for Blockset.  This defaults to
-    ///       `session.dataTask (with: request, ...)`
-    ///
-    public init (bdbBaseURL: String = "https://api.blockset.com",
-                 bdbDataTaskFunc: DataTaskFunc? = nil) {
-        self.bdbBaseURL = bdbBaseURL
-        self.bdbDataTaskFunc = bdbDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
-    }
+        /// Initialize a BlocksetSystemClient
+        ///
+        /// - Parameters:
+        ///   - session: the URLSession to use.  Defaults to `URLSession (configuration: .default)`
+        ///   - bdbBaseURL: the baseURL for the BRD BlockChain DB.  Defaults to "http://blockchain-db.us-east-1.elasticbeanstalk.com"
+        ///   - bdbDataTaskFunc: an optional DataTaskFunc for BRD BlockChain DB.  This defaults to
+        ///       `session.dataTask (with: request, ...)`
+        ///   - apiBaseURL: the baseRUL for the BRD API Server.  Defaults to "https://api.breadwallet.com".
+        ///       if this is a DEBUG build then "https://stage2.breadwallet.com" will be used instead.
+        ///   - apiDataTaskFunc: an optional DataTaskFunc for BRD API services.  For a non-DEBUG build,
+        ///       this function would need to properly authenticate with BRD.  This means 'decorating
+        ///       the request' header, perhaps responding to a 'challenge', perhaps decripting and/or
+        ///       uncompressing response data.  This defaults to `session.dataTask (with: request, ...)`
+        ///       which suffices for DEBUG builds.
+        ///
+        public init (bdbBaseURL: String = "https://api.blockset.com",
+                     bdbDataTaskFunc: DataTaskFunc? = nil,
+                     apiBaseURL: String = "https://api.breadwallet.com",
+                     apiDataTaskFunc: DataTaskFunc? = nil) {
+
+            self.bdbBaseURL = bdbBaseURL
+            self.apiBaseURL = apiBaseURL
+
+            self.bdbDataTaskFunc = bdbDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
+            self.apiDataTaskFunc = apiDataTaskFunc ?? BlocksetSystemClient.defaultDataTaskFunc
+        }
 
     ///
     /// Create a BlocksetSystemClient using a specified Authorization token.  This is declared 'public'
