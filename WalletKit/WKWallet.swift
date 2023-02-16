@@ -197,13 +197,15 @@ public final class Wallet: Equatable {
     ///   - amount: The amount
     ///   - estimatedFeeBasis: The basis for 'fee'
     ///   - attributes: Optional transfer attributes.
+    ///   - exchangeId: Optional needed in swaps
     ///
     /// - Returns: A new transfer
     ///
     public func createTransfer (target: Address,
                                 amount: Amount,
                                 estimatedFeeBasis: TransferFeeBasis,
-                                attributes: Set<TransferAttribute>? = nil) -> Transfer? {
+                                attributes: Set<TransferAttribute>? = nil,
+                                exchangeId: String? = nil) -> Transfer? {
         if nil != attributes && nil != self.validateTransferAttributes(attributes!) {
             return nil
         }
@@ -216,7 +218,8 @@ public final class Wallet: Equatable {
                                            amount.core,
                                            estimatedFeeBasis.core,
                                            coreAttributesCount,
-                                           &coreAttributes)
+                                           &coreAttributes,
+                                           exchangeId)
             .map { Transfer (core: $0,
                              wallet: self,
                              take: false)

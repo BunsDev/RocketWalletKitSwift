@@ -44,6 +44,9 @@ public final class Transfer: Equatable {
     /// The unit for display of the transfer fee.
     public let unitForFee: Unit
     
+    /// The exchamgeId returned from the swap EP
+    public var exchangeId: String?
+    
     /// The source pays the fee and sends the amount.
     public private(set) lazy var source: Address? = {
         wkTransferGetSourceAddress (core)
