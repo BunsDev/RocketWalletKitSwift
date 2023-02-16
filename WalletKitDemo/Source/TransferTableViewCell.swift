@@ -1,9 +1,9 @@
 //
 //  TransferTableViewCell.swift
-//  CoreDemo
+//  WalletKitDemo
 //
 //  Created by Ed Gamble on 8/9/18.
-//  Copyright © 2018-2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2018-2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -44,7 +44,7 @@ class TransferTableViewCell: UITableViewCell {
         case .created: return UIColor.gray
         case .submitted: return UIColor.yellow
         case .included (let confirmation):
-            return confirmation.success ? UIColor.green : UIColor.red
+            return confirmation.succeeded ? UIColor.green : UIColor.red
         case .deleted: return UIColor.black
 
         case .signed: return UIColor.yellow

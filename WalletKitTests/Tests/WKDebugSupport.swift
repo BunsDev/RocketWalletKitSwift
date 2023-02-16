@@ -1,5 +1,5 @@
 //
-//  BRCryptoDebugSupport.swift
+//  WKDebugSupport.swift
 //  WalletKitTests
 //
 //  Created by Ed Gamble on 8/15/19.

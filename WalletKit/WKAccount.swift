@@ -1,9 +1,9 @@
 //
-//  BRCryptoAccount.swift
+//  WKAccount.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 3/27/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -15,15 +15,15 @@ import WalletKitCore
 ///
 ///
 public final class Account {
-    let core: BRCryptoAccount
+    let core: WKAccount
 
     // A 'globally unique' ID String for account.  For BlockchainDB this will be the 'walletId'
     public var uids: String {
-        return asUTF8String (cryptoAccountGetUids (core))
+        return asUTF8String (wkAccountGetUids (core))
     }
 
     public var timestamp: Date {
-        return Date.init(timeIntervalSince1970: TimeInterval (cryptoAccountGetTimestamp (core)))
+        return Date.init(timeIntervalSince1970: TimeInterval (wkAccountGetTimestamp (core)))
     }
 
     ///
@@ -31,8 +31,8 @@ public final class Account {
     ///
     public var serialize: Data {
         var bytesCount: Int = 0
-        let bytes = cryptoAccountSerialize (core, &bytesCount)
-        defer { cryptoMemoryFree(bytes) }
+        let bytes = wkAccountSerialize (core, &bytesCount)
+        defer { wkMemoryFree(bytes) }
         return Data (bytes: bytes!, count: bytesCount)
     }
 
@@ -43,19 +43,19 @@ public final class Account {
     ///
     public func validate (serialization: Data) -> Bool {
         var bytes = [UInt8](serialization)
-        return CRYPTO_TRUE == cryptoAccountValidateSerialization (core, &bytes, bytes.count)
+        return WK_TRUE == wkAccountValidateSerialization (core, &bytes, bytes.count)
     }
 
-    internal init (core: BRCryptoAccount, take: Bool) {
-        self.core = take ? cryptoAccountTake(core) : core
+    internal init (core: WKAccount, take: Bool) {
+        self.core = take ? wkAccountTake(core) : core
     }
 
     internal var fileSystemIdentifier: String {
-        return asUTF8String (cryptoAccountGetFileSystemIdentifier(core), true);
+        return asUTF8String (wkAccountGetFileSystemIdentifier(core), true);
     }
 
     deinit {
-        cryptoAccountGive (core)
+        wkAccountGive (core)
     }
 
     ///
@@ -66,9 +66,9 @@ public final class Account {
     ///
     /// - Returns: the paperKey's corresponding account, or NIL if the paperKey is invalid.
     ///
-    public static func createFrom (phrase: String, timestamp: Date, uids: String) -> Account? {
+    public static func createFrom (phrase: String, timestamp: Date, uids: String, isMainnet: Bool) -> Account? {
         let timestampAsInt = UInt64 (timestamp.timeIntervalSince1970)
-        return cryptoAccountCreate (phrase, timestampAsInt, uids)
+        return wkAccountCreate (phrase, timestampAsInt, uids, isMainnet ? WK_TRUE : WK_FALSE)
             .map { Account (core: $0, take: false) }
     }
 
@@ -86,7 +86,7 @@ public final class Account {
     ///
     public static func createFrom (serialization: Data, uids: String) -> Account? {
         var bytes = [UInt8](serialization)
-        return cryptoAccountCreateFromSerialization (&bytes, bytes.count, uids)
+        return wkAccountCreateFromSerialization (&bytes, bytes.count, uids)
             .map { Account (core: $0, take: false) }
     }
 
@@ -100,12 +100,12 @@ public final class Account {
     /// - Returns: A 12 word 'paper key'
     ///
     public static func generatePhrase (words: [String]) -> (String,Date)? {
-        precondition (CRYPTO_TRUE == cryptoAccountValidateWordsList (words.count))
+        precondition (WK_TRUE == wkAccountValidateWordsList (words.count))
 
         var words = words.map { UnsafePointer<Int8> (strdup($0)) }
-        defer { words.forEach { cryptoMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
+        defer { words.forEach { wkMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
 
-        return (asUTF8String (cryptoAccountGeneratePaperKey (&words)), Date())
+        return (asUTF8String (wkAccountGeneratePaperKey (&words)), Date())
     }
 
     ///
@@ -118,12 +118,12 @@ public final class Account {
     /// - Returns: true is a valid paper key; false otherwise
     ///
     public static func validatePhrase (_ phrase: String, words: [String]) -> Bool {
-        precondition (CRYPTO_TRUE == cryptoAccountValidateWordsList (words.count))
+        precondition (WK_TRUE == wkAccountValidateWordsList (words.count))
 
         var words = words.map { UnsafePointer<Int8> (strdup($0)) }
-        defer { words.forEach { cryptoMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
+        defer { words.forEach { wkMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
 
-        return CRYPTO_TRUE == cryptoAccountValidatePaperKey (phrase, &words)
+        return WK_TRUE == wkAccountValidatePaperKey (phrase, &words)
     }
 
     ///
@@ -136,7 +136,7 @@ public final class Account {
     /// - Returns: `true` if initialized; `false` otherwise
     ///
     internal func isInitialized (onNetwork network: Network) -> Bool {
-        return CRYPTO_TRUE == cryptoNetworkIsAccountInitialized(network.core, core)
+        return WK_TRUE == wkNetworkIsAccountInitialized(network.core, core)
     }
 
     ///
@@ -159,7 +159,7 @@ public final class Account {
             let dataAddr  = dataBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             let dataCount = dataBytes.count
 
-            cryptoNetworkInitializeAccount (network.core, core, dataAddr, dataCount);
+            wkNetworkInitializeAccount (network.core, core, dataAddr, dataCount);
 
             return serialize
         }
@@ -177,11 +177,11 @@ public final class Account {
     /// - Returns: Opaque data to be provided to the 'initialization provider'
     ///
     internal func getInitializationdData (onNetwork network: Network) -> Data? {
-        var bytesCount: BRCryptoCount = 0
-        return cryptoNetworkGetAccountInitializationData (network.core, core, &bytesCount)
+        var bytesCount: WKCount = 0
+        return wkNetworkGetAccountInitializationData (network.core, core, &bytesCount)
             .map {
                 let bytes = $0
-                defer { cryptoMemoryFree (bytes) }
+                defer { wkMemoryFree (bytes) }
                 return Data (bytes: bytes, count: bytesCount)
         }
     }

@@ -1,9 +1,9 @@
 //
 //  AppDelegate.swift
-//  CoreXDemo
+//  WalletKitDemo
 //
 //  Created by Ed Gamble on 11/8/18.
-//  Copyright © 2018-2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2018-2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -88,7 +88,8 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
 
         account = Account.createFrom (phrase: accountSpecification.paperKey,
                                       timestamp: accountSpecification.timestamp,
-                                      uids: accountUids)
+                                      uids: accountUids,
+                                      isMainnet: mainnet)
         guard nil != account
             else { preconditionFailure ("APP: No account") }
         accountSerialization = account.serialize
@@ -128,10 +129,13 @@ class CoreDemoAppDelegate: UIResponder, UIApplicationDelegate, UISplitViewContro
             "btc" : .api_only,
             "bch" : .api_only,
             "bsv" : .api_only,
+            "ltc" : .api_only,
+            "doge": .api_only,
             "eth" : .api_only,
             "xrp" : .api_only,
             "hbar": .api_only,
-            "xtz" : .api_only
+            "xtz" : .api_only,
+            "xlm" : .api_only
             ]
 
         registerCurrencyCodes = (mainnet
@@ -313,7 +317,8 @@ extension UIApplication {
                     app.accountSpecification = accountSpecification
                     app.account = Account.createFrom (phrase: accountSpecification.paperKey,
                                                       timestamp: accountSpecification.timestamp,
-                                                      uids: "WalletID: \(accountSpecification.identifier)")
+                                                      uids: "WalletID: \(accountSpecification.identifier)",
+                                                      isMainnet: mainnet)
 
                     print ("APP: Account PaperKey  : \(accountSpecification.paperKey.components(separatedBy: CharacterSet.whitespaces).first ?? "<missed>") ...")
                     print ("APP: Account Timestamp : \(app.account.timestamp)")
@@ -374,11 +379,10 @@ extension Network {
         case .btc: return "bitcoin"
         case .bch: return (onMainnet ? "bitcoincash" : "bchtest")
         case .bsv: return "bitcoinsv"
+        case .ltc: return "litecoin"
+        case .doge: return "dogecoin"
         case .eth: return "ethereum"
-        case .xrp: return "ripple"
-        case .hbar: return "hedera"
-        case .xtz: return "tezos"
-//        case .xlm:  return "stellar"
+        default:   return nil
         }
     }
 }

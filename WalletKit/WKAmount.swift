@@ -1,9 +1,9 @@
 //
-//  BRCryptoAmount.swift
+//  WKAmount.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 3/27/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -18,13 +18,13 @@ import WalletKitCore
 ///
 public final class Amount {
     /// The underlying Core memory reference
-    internal let core: BRCryptoAmount
+    internal let core: WKAmount
 
     /// The (default) unit.  Without this there is no reasonable implementation of
     /// CustomeStringConvertable.  This property is only used in the `description` function
     /// and to ascertain the Amount's currency typically for consistency in add/sub functions.
     public var unit: Unit {
-        return Unit (core: cryptoAmountGetUnit (core), take: false)
+        return Unit (core: wkAmountGetUnit (core), take: false)
     }
 
     /// The currency
@@ -33,7 +33,7 @@ public final class Amount {
     }
 
     public var isNegative: Bool {
-        return CRYPTO_TRUE == cryptoAmountIsNegative (core)
+        return WK_TRUE == wkAmountIsNegative (core)
     }
 
     ///
@@ -52,9 +52,9 @@ public final class Amount {
     /// - Parameter unit:
     ///
     public func double (as unit: Unit) -> Double? {
-        var overflow: BRCryptoBoolean = CRYPTO_FALSE
-        let value = cryptoAmountGetDouble(core, unit.core, &overflow)
-        return CRYPTO_TRUE == overflow ? nil : value
+        var overflow: WKBoolean = WK_FALSE
+        let value = wkAmountGetDouble(core, unit.core, &overflow)
+        return WK_TRUE == overflow ? nil : value
     }
 
     /// Convert `Amount` into `String` using `unit` and `formatter`.
@@ -92,9 +92,9 @@ public final class Amount {
 
     /// INTERNAL: Returns the low uint64_t value optionally.
     internal var integerRawSmall: UInt64? {
-        var overflow: BRCryptoBoolean = CRYPTO_FALSE
-        let value = cryptoAmountGetIntegerRaw (core, &overflow)
-        return CRYPTO_TRUE == overflow ? nil : value
+        var overflow: WKBoolean = WK_FALSE
+        let value = wkAmountGetIntegerRaw (core, &overflow)
+        return WK_TRUE == overflow ? nil : value
     }
 
     ///
@@ -114,54 +114,54 @@ public final class Amount {
     /// - Returns: the amount in the base unit as a 'raw string'
     ///
     public func string (base: UInt8 = 16, preface: String = "0x") -> String {
-        return asUTF8String (cryptoAmountGetStringPrefaced(self.core, Int32(base), preface))
+        return asUTF8String (wkAmountGetStringPrefaced(self.core, Int32(base), preface))
     }
 
     public func isCompatible (with that: Amount) -> Bool {
-        return CRYPTO_TRUE == cryptoAmountIsCompatible (self.core, that.core)
+        return WK_TRUE == wkAmountIsCompatible (self.core, that.core)
     }
 
     public func hasCurrency (_ currency: Currency) -> Bool {
-        return CRYPTO_TRUE == cryptoAmountHasCurrency (core, currency.core)
+        return WK_TRUE == wkAmountHasCurrency (core, currency.core)
     }
 
     public func add (_ that: Amount) -> Amount? {
         precondition (isCompatible (with: that))
-        return cryptoAmountAdd (self.core, that.core)
+        return wkAmountAdd (self.core, that.core)
             .map { Amount (core: $0, take: false) }
     }
 
     public func sub (_ that: Amount) -> Amount? {
         precondition (isCompatible (with: that))
-        return cryptoAmountSub (self.core, that.core)
+        return wkAmountSub (self.core, that.core)
             .map { Amount (core: $0, take: false) }
     }
 
     public func convert (to unit: Unit) -> Amount? {
-        return cryptoAmountConvertToUnit (self.core, unit.core)
+        return wkAmountConvertToUnit (self.core, unit.core)
                 .map { Amount (core: $0, take: false) }
     }
 
     public var negate: Amount {
-        return Amount (core: cryptoAmountNegate (core), take: false)
+        return Amount (core: wkAmountNegate (core), take: false)
     }
 
     public var isZero: Bool {
-        return CRYPTO_TRUE == cryptoAmountIsZero (core)
+        return WK_TRUE == wkAmountIsZero (core)
     }
     
-    internal init (core: BRCryptoAmount,
+    internal init (core: WKAmount,
                    take: Bool) {
-        self.core = take ? cryptoAmountTake(core) : core
+        self.core = take ? wkAmountTake(core) : core
     }
 
     public static func create (double: Double, unit: Unit) -> Amount {
-        return Amount (core: cryptoAmountCreateDouble (double, unit.core),
+        return Amount (core: wkAmountCreateDouble (double, unit.core),
                        take: false)
     }
 
     public static func create (integer: Int64, unit: Unit) -> Amount {
-        return Amount (core: cryptoAmountCreateInteger (integer, unit.core),
+        return Amount (core: wkAmountCreateInteger (integer, unit.core),
                        take: false)
     }
 
@@ -190,7 +190,7 @@ public final class Amount {
     /// - Returns: The `Amount` if the string can be parsed.
     ///
     public static func create (string: String, negative: Bool = false, unit: Unit) -> Amount? {
-        return cryptoAmountCreateString (string, (negative ? CRYPTO_TRUE : CRYPTO_FALSE), unit.core)
+        return wkAmountCreateString (string, (negative ? WK_TRUE : WK_FALSE), unit.core)
             .map { Amount (core: $0, take: false) }
     }
 
@@ -214,7 +214,7 @@ public final class Amount {
     }
 
     deinit {
-        cryptoAmountGive (core)
+        wkAmountGive (core)
     }
 }
 
@@ -234,27 +234,27 @@ extension Amount {
 ///
 extension Amount: Comparable {
     public static func == (lhs: Amount, rhs: Amount) -> Bool {
-        return CRYPTO_COMPARE_EQ == cryptoAmountCompare (lhs.core, rhs.core)
+        return WK_COMPARE_EQ == wkAmountCompare (lhs.core, rhs.core)
     }
 
     public static func < (lhs: Amount, rhs: Amount) -> Bool {
-        return CRYPTO_COMPARE_LT == cryptoAmountCompare (lhs.core, rhs.core)
+        return WK_COMPARE_LT == wkAmountCompare (lhs.core, rhs.core)
     }
 
     public static func > (lhs: Amount, rhs: Amount) -> Bool {
-        return CRYPTO_COMPARE_GT == cryptoAmountCompare (lhs.core, rhs.core)
+        return WK_COMPARE_GT == wkAmountCompare (lhs.core, rhs.core)
     }
 
     public static func != (lhs: Amount, rhs: Amount) -> Bool {
-        return CRYPTO_COMPARE_EQ != cryptoAmountCompare (lhs.core, rhs.core)
+        return WK_COMPARE_EQ != wkAmountCompare (lhs.core, rhs.core)
     }
 
     public static func <= (lhs: Amount, rhs: Amount) -> Bool {
-        return CRYPTO_COMPARE_GT != cryptoAmountCompare (lhs.core, rhs.core)
+        return WK_COMPARE_GT != wkAmountCompare (lhs.core, rhs.core)
     }
 
     public static func >= (lhs: Amount, rhs: Amount) -> Bool {
-        return CRYPTO_COMPARE_LT != cryptoAmountCompare (lhs.core, rhs.core)
+        return WK_COMPARE_LT != wkAmountCompare (lhs.core, rhs.core)
     }
 }
 

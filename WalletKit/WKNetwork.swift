@@ -1,9 +1,9 @@
 //
-//  BRCryptoNetwork.swift
+//  WKNetwork.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 3/27/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -16,7 +16,7 @@ import WalletKitCore
 /// be networks of [BTC-Mainnet, BTC-Testnet, ..., ETH-Mainnet, ETH-Testnet, ETH-Rinkeby, ...]
 ///
 public final class Network: CustomStringConvertible {
-    let core: BRCryptoNetwork
+    let core: WKNetwork
 
     /// A unique-identifer-string
     internal let uids: String
@@ -33,19 +33,19 @@ public final class Network: CustomStringConvertible {
     /// The current height of the blockChain network.  On a reorganization, this might go backwards.
     /// (No guarantee that this monotonically increases)
     public internal(set) var height: UInt64 {
-        get { return cryptoNetworkGetHeight (core) }
-        set { cryptoNetworkSetHeight (core, newValue) }
+        get { return wkNetworkGetHeight (core) }
+        set { wkNetworkSetHeight (core, newValue) }
     }
 
     /// The network fees.  Expect the User to select their preferred fee, based on time-to-confirm,
     /// and then have their preferred fee held in WalletManager.defaultNetworkFee.
     public internal(set) var fees: [NetworkFee] {
         get {
-            var count: BRCryptoCount = 0
-            let ptr = cryptoNetworkGetNetworkFees(core, &count);
-            defer { if let p = ptr { cryptoMemoryFree (p) } }
+            var count: WKCount = 0
+            let ptr = wkNetworkGetNetworkFees(core, &count);
+            defer { if let p = ptr { wkMemoryFree (p) } }
 
-            let items = ptr?.withMemoryRebound(to: BRCryptoNetworkFee.self, capacity: count) {
+            let items = ptr?.withMemoryRebound(to: WKNetworkFee.self, capacity: count) {
                 Array(UnsafeBufferPointer (start: $0, count: count))
             } ?? []
 
@@ -54,9 +54,9 @@ public final class Network: CustomStringConvertible {
         set {
             precondition(0 != newValue.count)
 
-            let feeCores: [BRCryptoNetworkFee?] = newValue.map { $0.core }
-            feeCores.withUnsafeBufferPointer { (buffer: UnsafeBufferPointer<BRCryptoNetworkFee?>) -> Void in
-                cryptoNetworkSetNetworkFees(core, buffer.baseAddress!, feeCores.count)
+            let feeCores: [WKNetworkFee?] = newValue.map { $0.core }
+            feeCores.withUnsafeBufferPointer { (buffer: UnsafeBufferPointer<WKNetworkFee?>) -> Void in
+                wkNetworkSetNetworkFees(core, buffer.baseAddress!, feeCores.count)
             }
         }
     }
@@ -67,7 +67,7 @@ public final class Network: CustomStringConvertible {
     }
 
     public var confirmationsUntilFinal: UInt32 {
-        return cryptoNetworkGetConfirmationsUntilFinal (core);
+        return wkNetworkGetConfirmationsUntilFinal (core);
     }
 
     ///
@@ -94,7 +94,7 @@ public final class Network: CustomStringConvertible {
     /// - Returns: The default AddressScheme
     ///
     public lazy var defaultAddressScheme: AddressScheme = {
-        return AddressScheme (core: cryptoNetworkGetDefaultAddressScheme (core))
+        return AddressScheme (core: wkNetworkGetDefaultAddressScheme (core))
     }()
 
     ///
@@ -105,9 +105,9 @@ public final class Network: CustomStringConvertible {
     /// - Returns: An array of AddressScheme
     ///
     public lazy var supportedAddressSchemes: [AddressScheme] = {
-        var schemesCount: BRCryptoCount = 0;
-        return cryptoNetworkGetSupportedAddressSchemes (core, &schemesCount)
-            .withMemoryRebound (to: BRCryptoAddressScheme.self, capacity: schemesCount) {
+        var schemesCount: WKCount = 0;
+        return wkNetworkGetSupportedAddressSchemes (core, &schemesCount)
+            .withMemoryRebound (to: WKAddressScheme.self, capacity: schemesCount) {
                 Array (UnsafeBufferPointer (start: $0, count: schemesCount))
         }
         .map { AddressScheme (core: $0) }
@@ -123,7 +123,7 @@ public final class Network: CustomStringConvertible {
     /// - Returns: If supported `true`; otherwise `false`.
     ///
     public func supportsAddressScheme (_ scheme: AddressScheme) -> Bool {
-        return CRYPTO_TRUE == cryptoNetworkSupportsAddressScheme (core, scheme.core)
+        return WK_TRUE == wkNetworkSupportsAddressScheme (core, scheme.core)
     }
 
     // Sync Modes
@@ -136,7 +136,7 @@ public final class Network: CustomStringConvertible {
     /// - Returns: the default mode
     ///
     public lazy var defaultMode: WalletManagerMode = {
-        return WalletManagerMode (core: cryptoNetworkGetDefaultSyncMode(core))
+        return WalletManagerMode (core: wkNetworkGetDefaultSyncMode(core))
     }()
 
     ///
@@ -147,9 +147,9 @@ public final class Network: CustomStringConvertible {
     /// - Returns: an aray of WalletManagerMode
     ///
     public lazy var supportedModes : [WalletManagerMode] = {
-        var modesCount: BRCryptoCount = 0;
-        return cryptoNetworkGetSupportedSyncModes (core, &modesCount)
-            .withMemoryRebound(to: BRCryptoSyncMode.self, capacity: modesCount) {
+        var modesCount: WKCount = 0;
+        return wkNetworkGetSupportedSyncModes (core, &modesCount)
+            .withMemoryRebound(to: WKSyncMode.self, capacity: modesCount) {
                 Array (UnsafeBufferPointer (start: $0, count: modesCount))
         }
         .map { WalletManagerMode (core: $0) }
@@ -165,7 +165,7 @@ public final class Network: CustomStringConvertible {
     /// - Returns: If supported `true`; otherwise `false`
     ///
     public func supportsMode (_ mode: WalletManagerMode) -> Bool {
-        return CRYPTO_TRUE == cryptoNetworkSupportsSyncMode (core, mode.core)
+        return WK_TRUE == wkNetworkSupportsSyncMode (core, mode.core)
     }
 
     /// The native currency.
@@ -173,41 +173,41 @@ public final class Network: CustomStringConvertible {
 
     /// All currencies - at least those we are handling/interested-in.
     public var currencies: Set<Currency> {
-        Set ((0..<cryptoNetworkGetCurrencyCount(core))
-            .map { cryptoNetworkGetCurrencyAt (core, $0) }
+        Set ((0..<wkNetworkGetCurrencyCount(core))
+            .map { wkNetworkGetCurrencyAt (core, $0) }
             .map { Currency (core: $0, take: false)})
     }
 
     public func currencyBy (code: String) -> Currency? {
-        return cryptoNetworkGetCurrencyForCode (core, code)
+        return wkNetworkGetCurrencyForCode (core, code)
             .map { Currency (core: $0, take: false) }
     }
 
     public func currencyBy (issuer: String) -> Currency? {
-        return cryptoNetworkGetCurrencyForIssuer (core, issuer)
+        return wkNetworkGetCurrencyForIssuer (core, issuer)
             .map { Currency (core: $0, take: false) }
     }
 
     public func hasCurrency(_ currency: Currency) -> Bool {
-        return CRYPTO_TRUE == cryptoNetworkHasCurrency (core, currency.core)
+        return WK_TRUE == wkNetworkHasCurrency (core, currency.core)
     }
 
     public func baseUnitFor (currency: Currency) -> Unit? {
         guard hasCurrency(currency) else { return nil }
-        return cryptoNetworkGetUnitAsBase (core, currency.core)
+        return wkNetworkGetUnitAsBase (core, currency.core)
             .map { Unit (core: $0, take: false) }
     }
 
     public func defaultUnitFor (currency: Currency) -> Unit? {
         guard hasCurrency (currency) else { return nil }
-        return cryptoNetworkGetUnitAsDefault (core, currency.core)
+        return wkNetworkGetUnitAsDefault (core, currency.core)
             .map { Unit (core: $0, take: false) }
     }
 
     public func unitsFor (currency: Currency) -> Set<Unit>? {
         guard hasCurrency (currency) else { return nil }
-        return Set ((0..<cryptoNetworkGetUnitCount (core, currency.core))
-            .map { cryptoNetworkGetUnitAt (core, currency.core, $0) }
+        return Set ((0..<wkNetworkGetUnitCount (core, currency.core))
+            .map { wkNetworkGetUnitAt (core, currency.core, $0) }
             .map { Unit (core: $0, take: false) }
         )
     }
@@ -220,7 +220,7 @@ public final class Network: CustomStringConvertible {
         precondition (baseUnit.hasCurrency(currency))
         precondition (defaultUnit.hasCurrency(currency))
         if !hasCurrency(currency) {
-            cryptoNetworkAddCurrency (core, currency.core, baseUnit.core, defaultUnit.core)
+            wkNetworkAddCurrency (core, currency.core, baseUnit.core, defaultUnit.core)
         }
     }
     
@@ -228,31 +228,31 @@ public final class Network: CustomStringConvertible {
         precondition (hasCurrency(currency))
         precondition (unit.hasCurrency(currency))
         if !hasUnitFor(currency: currency, unit: unit)! { // 'bang' is safe here
-            cryptoNetworkAddCurrencyUnit (core, currency.core, unit.core)
+            wkNetworkAddCurrencyUnit (core, currency.core, unit.core)
         }
     }
 
-    internal init (core: BRCryptoNetwork, take: Bool) {
-        self.core = take ? cryptoNetworkTake(core) : core
-        self.uids = asUTF8String (cryptoNetworkGetUids (core))
-        self.name = asUTF8String (cryptoNetworkGetName (core))
-        self.onMainnet  = (CRYPTO_TRUE == cryptoNetworkIsMainnet (core))
-        self.type       = NetworkType (core: cryptoNetworkGetType(core))
-        self.currency   = Currency (core: cryptoNetworkGetCurrency(core), take: false)
+    internal init (core: WKNetwork, take: Bool) {
+        self.core = take ? wkNetworkTake(core) : core
+        self.uids = asUTF8String (wkNetworkGetUids (core))
+        self.name = asUTF8String (wkNetworkGetName (core))
+        self.onMainnet  = (WK_TRUE == wkNetworkIsMainnet (core))
+        self.type       = NetworkType (core: wkNetworkGetType(core))
+        self.currency   = Currency (core: wkNetworkGetCurrency(core), take: false)
     }
 
     internal static func findBuiltin (uids: String) -> Network? {
-        return cryptoNetworkFindBuiltin(uids, uids.hasSuffix("mainnet"))
+        return wkNetworkFindBuiltin(uids, uids.hasSuffix("mainnet"))
             .map { Network (core: $0, take: false) }
     }
 
 //    internal static func installBuiltins (isMainnet: Bool = true) -> [Network] {
 //        var builtinCoresCount: Int = 0
-//        let builtinCores = cryptoNetworkInstallBuiltins (&builtinCoresCount, isMainnet)!
-//        defer { cryptoMemoryFree (builtinCores) }
+//        let builtinCores = wkNetworkInstallBuiltins (&builtinCoresCount, isMainnet)!
+//        defer { wkMemoryFree (builtinCores) }
 //
 //        return builtinCores
-//            .withMemoryRebound (to: BRCryptoNetwork.self, capacity: builtinCoresCount) {
+//            .withMemoryRebound (to: WKNetwork.self, capacity: builtinCoresCount) {
 //                Array (UnsafeBufferPointer (start: $0, count: builtinCoresCount))
 //        }
 //        .map { Network (core: $0, take: false) }
@@ -263,15 +263,15 @@ public final class Network: CustomStringConvertible {
     }
 
     public static func getTypeFromName (name: String) -> NetworkType? {
-        var isMainnet: BRCryptoBoolean = CRYPTO_FALSE
-        let core = cryptoNetworkGetTypeFromName (name, &isMainnet)
-        return (core == BRCryptoBlockChainType (CRYPTO_NETWORK_TYPE_UNKNOWN)
+        var isMainnet: WKBoolean = WK_FALSE
+        let core = wkNetworkGetTypeFromName (name, &isMainnet)
+        return (core == WKNetworkType (WK_NETWORK_TYPE_UNKNOWN)
             ? nil
             : NetworkType (core: core))
     }
 
     deinit {
-        cryptoNetworkGive (core)
+        wkNetworkGive (core)
     }
 
     @available(*, deprecated, message: "Replace with Address.create(string:network:)")
@@ -304,41 +304,50 @@ public enum NetworkType: CustomStringConvertible {
     case btc
     case bch
     case bsv
+    case ltc
+    case doge
     case eth
     case xrp
     case hbar
     case xtz
-//    case xlm
+    case xlm
+    /* case __symbol__ */
 
-    internal init (core: BRCryptoBlockChainType) {
+    internal init (core: WKNetworkType) {
         switch core {
-        case CRYPTO_NETWORK_TYPE_BTC:  self = .btc
-        case CRYPTO_NETWORK_TYPE_BCH:  self = .bch
-        case CRYPTO_NETWORK_TYPE_BSV:  self = .bsv
-        case CRYPTO_NETWORK_TYPE_ETH:  self = .eth
-        case CRYPTO_NETWORK_TYPE_XRP:  self = .xrp
-        case CRYPTO_NETWORK_TYPE_HBAR: self = .hbar
-        case CRYPTO_NETWORK_TYPE_XTZ:  self = .xtz
-//        case CRYPTO_NETWORK_TYPE_XLM:  self = .xlm
+        case WK_NETWORK_TYPE_BTC:  self = .btc
+        case WK_NETWORK_TYPE_BCH:  self = .bch
+        case WK_NETWORK_TYPE_BSV:  self = .bsv
+        case WK_NETWORK_TYPE_LTC:  self = .ltc
+        case WK_NETWORK_TYPE_DOGE: self = .doge
+        case WK_NETWORK_TYPE_ETH:  self = .eth
+        case WK_NETWORK_TYPE_XRP:  self = .xrp
+        case WK_NETWORK_TYPE_HBAR: self = .hbar
+        case WK_NETWORK_TYPE_XTZ:  self = .xtz
+        case WK_NETWORK_TYPE_XLM:  self = .xlm
+        /* case WK_NETWORK_TYPE___SYMBOL__: self = .__symbol__ */
         default: preconditionFailure()
         }
     }
 
-    internal var core: BRCryptoBlockChainType {
+    internal var core: WKNetworkType {
         switch self {
-        case .btc: return CRYPTO_NETWORK_TYPE_BTC
-        case .bch: return CRYPTO_NETWORK_TYPE_BCH
-        case .bsv: return CRYPTO_NETWORK_TYPE_BSV
-        case .eth: return CRYPTO_NETWORK_TYPE_ETH
-        case .xrp: return CRYPTO_NETWORK_TYPE_XRP
-        case .hbar: return CRYPTO_NETWORK_TYPE_HBAR
-        case .xtz: return CRYPTO_NETWORK_TYPE_XTZ
-//        case .xml: return CRYPTO_NETWORK_TYPE_XLM
+        case .btc: return WK_NETWORK_TYPE_BTC
+        case .bch: return WK_NETWORK_TYPE_BCH
+        case .bsv: return WK_NETWORK_TYPE_BSV
+        case .ltc: return WK_NETWORK_TYPE_LTC
+        case .doge: return WK_NETWORK_TYPE_DOGE
+        case .eth: return WK_NETWORK_TYPE_ETH
+        case .xrp: return WK_NETWORK_TYPE_XRP
+        case .hbar: return WK_NETWORK_TYPE_HBAR
+        case .xtz: return WK_NETWORK_TYPE_XTZ
+        case .xlm: return WK_NETWORK_TYPE_XLM
+        /* case .__symbol__: return WK_NETWORK_TYPE___SYMBOL__ */
         }
     }
 
     public var description: String {
-        return "CRYPTO_NETWORK_TYPE_" + asUTF8String (cryptoBlockChainTypeGetCurrencyCode (core)).uppercased()
+        return "WK_NETWORK_TYPE_" + asUTF8String (wkNetworkTypeGetCurrencyCode (core)).uppercased()
     }
 }
 
@@ -357,18 +366,18 @@ public enum NetworkEvent {
 
     case deleted
 
-    init (core: BRCryptoNetworkEvent) {
+    init (core: WKNetworkEvent) {
         switch core.type {
-        case CRYPTO_NETWORK_EVENT_CREATED:
+        case WK_NETWORK_EVENT_CREATED:
             self = .created
 
-        case CRYPTO_NETWORK_EVENT_FEES_UPDATED:
+        case WK_NETWORK_EVENT_FEES_UPDATED:
             self = .feesUpdated
 
-        case CRYPTO_NETWORK_EVENT_CURRENCIES_UPDATED:
+        case WK_NETWORK_EVENT_CURRENCIES_UPDATED:
             self = .currenciesUpdated
 
-        case CRYPTO_NETWORK_EVENT_DELETED:
+        case WK_NETWORK_EVENT_DELETED:
             self = .deleted
 
         default:
@@ -411,7 +420,7 @@ public typealias NetworkEventHandler = (System, Network, NetworkEvent) -> Void
 ///
 public final class NetworkFee: Equatable {
     // The Core representation
-    internal var core: BRCryptoNetworkFee
+    internal var core: WKNetworkFee
 
     /// The estimated time internal for a transaction confirmation.
     public let timeIntervalInMilliseconds: UInt64
@@ -422,10 +431,10 @@ public final class NetworkFee: Equatable {
     internal let pricePerCostFactor: Amount
 
     /// Initialize from the Core representation
-    internal init (core: BRCryptoNetworkFee, take: Bool) {
-        self.core = (take ? cryptoNetworkFeeTake(core) : core)
-        self.timeIntervalInMilliseconds = cryptoNetworkFeeGetConfirmationTimeInMilliseconds(core)
-        self.pricePerCostFactor = Amount (core: cryptoNetworkFeeGetPricePerCostFactor (core),
+    internal init (core: WKNetworkFee, take: Bool) {
+        self.core = (take ? wkNetworkFeeTake(core) : core)
+        self.timeIntervalInMilliseconds = wkNetworkFeeGetConfirmationTimeInMilliseconds(core)
+        self.pricePerCostFactor = Amount (core: wkNetworkFeeGetPricePerCostFactor (core),
                                           take: false)
     }
 
@@ -433,19 +442,19 @@ public final class NetworkFee: Equatable {
     /// parsing a NetworkFee from BlockchainDB.Model.BlockchainFee
     internal convenience init (timeIntervalInMilliseconds: UInt64,
                                pricePerCostFactor: Amount) {
-        self.init (core: cryptoNetworkFeeCreate (timeIntervalInMilliseconds,
+        self.init (core: wkNetworkFeeCreate (timeIntervalInMilliseconds,
                                                  pricePerCostFactor.core,
                                                  pricePerCostFactor.unit.core),
                    take: false)
     }
 
     deinit {
-        cryptoNetworkFeeGive (core)
+        wkNetworkFeeGive (core)
     }
 
     // Equatable using the Core representation
     public static func == (lhs: NetworkFee, rhs: NetworkFee) -> Bool {
-        return CRYPTO_TRUE == cryptoNetworkFeeEqual (lhs.core, rhs.core)
+        return WK_TRUE == wkNetworkFeeEqual (lhs.core, rhs.core)
     }
 }
 
@@ -456,7 +465,7 @@ public final class NetworkFee: Equatable {
 ///
 public final class NetworkPeer: Equatable {
     // The Core representation
-    internal let core: BRCryptoPeer
+    internal let core: WKPeer
 
     /// The network
     public let network: Network
@@ -470,27 +479,27 @@ public final class NetworkPeer: Equatable {
     /// The public key
     public let publicKey: String?
 
-    internal init (core: BRCryptoPeer, take: Bool) {
-        self.core = (take ? cryptoPeerTake (core) : core)
-        self.network = Network (core: cryptoPeerGetNetwork (core), take: false)
-        self.address = asUTF8String (cryptoPeerGetAddress (core))
-        self.port    = cryptoPeerGetPort (core)
-        self.publicKey = cryptoPeerGetPublicKey (core)
+    internal init (core: WKPeer, take: Bool) {
+        self.core = (take ? wkPeerTake (core) : core)
+        self.network = Network (core: wkPeerGetNetwork (core), take: false)
+        self.address = asUTF8String (wkPeerGetAddress (core))
+        self.port    = wkPeerGetPort (core)
+        self.publicKey = wkPeerGetPublicKey (core)
             .map { asUTF8String ($0) }
     }
 
-    internal convenience init? (network: BRCryptoNetwork, address: String, port: UInt16, publicKey: String?) {
-        guard let core = cryptoPeerCreate (network, address, port, publicKey)
+    internal convenience init? (network: WKNetwork, address: String, port: UInt16, publicKey: String?) {
+        guard let core = wkPeerCreate (network, address, port, publicKey)
             else { return nil }
 
         self.init (core: core, take: false)
     }
 
     deinit {
-        cryptoPeerGive (core)
+        wkPeerGive (core)
     }
 
     public static func == (lhs: NetworkPeer, rhs: NetworkPeer) -> Bool {
-        return CRYPTO_TRUE == cryptoPeerIsIdentical (lhs.core, rhs.core)
+        return WK_TRUE == wkPeerIsIdentical (lhs.core, rhs.core)
     }
 }

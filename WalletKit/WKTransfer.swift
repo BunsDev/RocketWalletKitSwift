@@ -1,9 +1,9 @@
 //
-//  BRCryptoTransfer.swift
+//  WKTransfer.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 3/27/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -23,7 +23,7 @@ import WalletKitCore
 public final class Transfer: Equatable {
 
     /// The Core representation
-    internal let core: BRCryptoTransfer
+    internal let core: WKTransfer
 
     /// The owning wallet
     public let wallet: Wallet
@@ -44,18 +44,15 @@ public final class Transfer: Equatable {
     /// The unit for display of the transfer fee.
     public let unitForFee: Unit
     
-    /// The exchamgeId returned from the swap EP
-    public var exchangeId: String?
-    
     /// The source pays the fee and sends the amount.
     public private(set) lazy var source: Address? = {
-        cryptoTransferGetSourceAddress (core)
+        wkTransferGetSourceAddress (core)
             .map { Address (core: $0, take: false) }
     }()
 
     /// The target receives the amount
     public private(set) lazy var target: Address? = {
-        cryptoTransferGetTargetAddress (core)
+        wkTransferGetTargetAddress (core)
             .map { Address (core: $0, take: false) }
     }()
 
@@ -72,7 +69,7 @@ public final class Transfer: Equatable {
     /// The `amountDirected` might change on a Transfer state change.
     ///
     public var amountDirected: Amount {
-        return Amount (core: cryptoTransferGetAmountDirected(core), take: false)
+        return Amount (core: wkTransferGetAmountDirected(core), take: false)
     }
 
     /// TODO: Determine if the estimatedFeeBasis applies across program instantiations
@@ -80,13 +77,13 @@ public final class Transfer: Equatable {
     /// The basis for the estimated fee.  This is only not-nil if we have created the transfer
     /// IN THIS MEMORY INSTANCE (assume this for now).
     public var estimatedFeeBasis: TransferFeeBasis? {
-        return cryptoTransferGetEstimatedFeeBasis (core)
+        return wkTransferGetEstimatedFeeBasis (core)
             .map { TransferFeeBasis (core: $0, take: false) }
     }
 
     /// The basis for the confirmed fee.
     public var confirmedFeeBasis: TransferFeeBasis? {
-        return cryptoTransferGetConfirmedFeeBasis (core)
+        return wkTransferGetConfirmedFeeBasis (core)
             .map { TransferFeeBasis (core: $0, take: false) }
     }
 
@@ -104,25 +101,27 @@ public final class Transfer: Equatable {
         else { return nil }
     }
 
+    /// The originating transaction's identifier - typically a hash.  This may be `nil`.  There
+    /// may be transfers with duplicate identifiers in a wallet.
     public var identifier: String? {
-        return cryptoTransferGetIdentifier(core)
+        return wkTransferGetIdentifier(core)
             .map { asUTF8String($0) }
     }
     
     /// An optional hash.  This only exists if the TransferState is .included or .submitted
     public var hash: TransferHash? {
-        return cryptoTransferGetHash (core)
+        return wkTransferGetHash (core)
             .map { TransferHash (core: $0, take: false) }
     }
 
     /// The current state
     public var state: TransferState {
-        return TransferState (core: cryptoTransferGetState (core))
+        return TransferState (core: wkTransferGetState (core))
     }
 
     /// The direction
     public private(set) lazy var direction: TransferDirection = {
-        return TransferDirection (core: cryptoTransferGetDirection (self.core))
+        return TransferDirection (core: wkTransferGetDirection (self.core))
     }()
 
     //
@@ -131,39 +130,39 @@ public final class Transfer: Equatable {
     // attribtues will not impact the transfer.  The returned set is possibly, likely emptyh.
     //
     public private(set) lazy var attributes: Set<TransferAttribute> = {
-        let coreAttributes = (0..<cryptoTransferGetAttributeCount(core))
-            .map { cryptoTransferGetAttributeAt (core, $0)! }
-        defer { coreAttributes.forEach (cryptoTransferAttributeGive) }
+        let coreAttributes = (0..<wkTransferGetAttributeCount(core))
+            .map { wkTransferGetAttributeAt (core, $0)! }
+        defer { coreAttributes.forEach (wkTransferAttributeGive) }
 
         // Make a copy so that any mutations of the attributes in the returned Set do not
         // make it back into this transfer's attributes.  The attributes themselves are reference
         // types and thus, even if the Set is immutable, it's elements won't be.
-        return Set (coreAttributes.map { TransferAttribute (core: cryptoTransferAttributeCopy($0), take: false) })
+        return Set (coreAttributes.map { TransferAttribute (core: wkTransferAttributeCopy($0), take: false) })
     }()
 
-    internal init (core: BRCryptoTransfer,
+    internal init (core: WKTransfer,
                    wallet: Wallet,
                    take: Bool) {
 
-        self.core   = take ? cryptoTransferTake(core) : core
+        self.core   = take ? wkTransferTake(core) : core
         self.wallet = wallet
 
-        self.unit       = Unit (core: cryptoTransferGetUnitForAmount (core), take: false)
-        self.unitForFee = Unit (core: cryptoTransferGetUnitForFee (core),    take: false)
+        self.unit       = Unit (core: wkTransferGetUnitForAmount (core), take: false)
+        self.unitForFee = Unit (core: wkTransferGetUnitForFee (core),    take: false)
 
         // Other properties
-        self.amount         = Amount (core: cryptoTransferGetAmount (core),        take: false)
+        self.amount         = Amount (core: wkTransferGetAmount (core),        take: false)
     }
 
 
     // var originator: Bool { get }
 
     func identical (that: Transfer) -> Bool {
-        return  CRYPTO_TRUE == cryptoTransferEqual (self.core, that.core)
+        return  WK_TRUE == wkTransferEqual (self.core, that.core)
     }
 
     deinit {
-        cryptoTransferGive (core)
+        wkTransferGive (core)
     }
 
     // Equatable
@@ -204,20 +203,20 @@ public enum TransferDirection: Equatable {
     case received
     case recovered
 
-    internal init (core: BRCryptoTransferDirection) {
+    internal init (core: WKTransferDirection) {
         switch core {
-        case CRYPTO_TRANSFER_SENT:      self = .sent
-        case CRYPTO_TRANSFER_RECEIVED:  self = .received
-        case CRYPTO_TRANSFER_RECOVERED: self = .recovered
+        case WK_TRANSFER_SENT:      self = .sent
+        case WK_TRANSFER_RECEIVED:  self = .received
+        case WK_TRANSFER_RECOVERED: self = .recovered
         default: self = .sent;  preconditionFailure()
         }
     }
 
-    internal var core: BRCryptoTransferDirection {
+    internal var core: WKTransferDirection {
         switch self {
-        case .sent:      return CRYPTO_TRANSFER_SENT
-        case .received:  return CRYPTO_TRANSFER_RECEIVED
-        case .recovered: return CRYPTO_TRANSFER_RECOVERED
+        case .sent:      return WK_TRANSFER_SENT
+        case .received:  return WK_TRANSFER_RECEIVED
+        case .recovered: return WK_TRANSFER_RECOVERED
         }
     }
 }
@@ -232,7 +231,7 @@ public enum TransferDirection: Equatable {
 ///
 public class TransferFeeBasis: Equatable {
     /// The Core representation
-    internal let core: BRCryptoFeeBasis
+    internal let core: WKFeeBasis
 
     /// The unit for both the pricePerCostFactor and fee.
     public let unit: Unit
@@ -252,15 +251,15 @@ public class TransferFeeBasis: Equatable {
     public let fee: Amount
 
     /// Initialize based on Core
-    internal init (core: BRCryptoFeeBasis, take: Bool) {
-        self.core = take ? cryptoFeeBasisTake (core) : core
+    internal init (core: WKFeeBasis, take: Bool) {
+        self.core = take ? wkFeeBasisTake (core) : core
 
-        self.pricePerCostFactor = Amount (core: cryptoFeeBasisGetPricePerCostFactor(core), take: false)
+        self.pricePerCostFactor = Amount (core: wkFeeBasisGetPricePerCostFactor(core), take: false)
         self.unit = self.pricePerCostFactor.unit
-        self.costFactor  = cryptoFeeBasisGetCostFactor (core)
+        self.costFactor  = wkFeeBasisGetCostFactor (core)
 
         // TODO: The Core fee calculation might overflow.
-        guard let fee = cryptoFeeBasisGetFee (core)
+        guard let fee = wkFeeBasisGetFee (core)
             .map ({ Amount (core: $0, take: false) })
             else { print ("Missed Fee"); preconditionFailure () }
 
@@ -268,78 +267,117 @@ public class TransferFeeBasis: Equatable {
     }
 
     deinit {
-        cryptoFeeBasisGive (core)
+        wkFeeBasisGive (core)
     }
 
     public static func == (lhs: TransferFeeBasis, rhs: TransferFeeBasis) -> Bool {
-        return CRYPTO_TRUE == cryptoFeeBasisIsEqual (lhs.core, rhs.core)
+        return WK_TRUE == wkFeeBasisIsEqual (lhs.core, rhs.core)
     }
-}
-
-///
-/// A TransferConfirmation holds confirmation information.
-///
-public struct TransferConfirmation: Equatable {
-    public let blockNumber: UInt64
-    public let transactionIndex: UInt64
-    public let timestamp: UInt64
-    public let fee: Amount?  // Optional, for now
-    public let success: Bool
-    public let error: String?
 }
 
 ///
 /// A TransferHash uniquely identifies a transfer *among* the owning wallet's transfers.
 ///
 public class TransferHash: Hashable, CustomStringConvertible {
-    internal let core: BRCryptoHash
+    internal let core: WKHash
 
-    init (core: BRCryptoHash, take: Bool) {
-        self.core = take ? cryptoHashTake (core) : core
+    init (core: WKHash, take: Bool) {
+        self.core = take ? wkHashTake (core) : core
     }
 
     deinit {
-        cryptoHashGive (core)
+        wkHashGive (core)
     }
 
     public func hash (into hasher: inout Hasher) {
-        hasher.combine (cryptoHashGetHashValue (core))
+        hasher.combine (wkHashGetHashValue (core))
     }
 
     public static func == (lhs: TransferHash, rhs: TransferHash) -> Bool {
-        return CRYPTO_TRUE == cryptoHashEqual (lhs.core, rhs.core)
+        return WK_TRUE == wkHashEqual (lhs.core, rhs.core)
     }
 
     public var description: String {
-        return asUTF8String (cryptoHashEncodeString (core), true)
+        return asUTF8String (wkHashEncodeString (core), true)
     }
 }
 
-public enum TransferSubmitError: Equatable, Error {
-    case unknown
-    case posix(errno: Int32, message: String?)
+// MARK: - Submit Error
 
-    internal init (core: BRCryptoTransferSubmitError) {
-        switch core.type {
-        case CRYPTO_TRANSFER_SUBMIT_ERROR_UNKNOWN:
-            self = .unknown
-        case CRYPTO_TRANSFER_SUBMIT_ERROR_POSIX:
-            var c = core
-            self = .posix(errno: core.u.posix.errnum,
-                          message: cryptoTransferSubmitErrorGetMessage (&c).map{ asUTF8String($0, true) } )
-        default: self = .unknown; preconditionFailure()
+public enum TransferSubmitErrorType: Equatable, Error {
+    case account
+    case signature
+    case insufficientBalance
+    case insufficientNetworkFee
+    case insufficientNetworkCostUnit
+    case insufficientFee
+    case nonceTooLow
+    case invalidNonce
+    case transactionExpired
+    case transactionDuplicate
+    case transaction
+    case unknown
+
+    case clientBadRequest
+    case clientPermission
+    case clientResource
+    case clientBadResponse
+    case clientUnavailable
+
+    case lostConnectivity
+
+    internal init (_ core: WKTransferSubmitErrorType) {
+        switch core {
+        case WK_TRANSFER_SUBMIT_ERROR_ACCOUNT:   self = .account
+        case WK_TRANSFER_SUBMIT_ERROR_SIGNATURE: self = .signature
+        case WK_TRANSFER_SUBMIT_ERROR_INSUFFICIENT_BALANCE:           self = .insufficientBalance
+        case WK_TRANSFER_SUBMIT_ERROR_INSUFFICIENT_NETWORK_FEE:       self = .insufficientNetworkFee
+        case WK_TRANSFER_SUBMIT_ERROR_INSUFFICIENT_NETWORK_COST_UNIT: self = .insufficientNetworkCostUnit
+        case WK_TRANSFER_SUBMIT_ERROR_INSUFFICIENT_FEE:      self = .insufficientFee
+        case WK_TRANSFER_SUBMIT_ERROR_NONCE_TOO_LOW:         self = .nonceTooLow
+        case WK_TRANSFER_SUBMIT_ERROR_NONCE_INVALID:         self = .invalidNonce
+        case WK_TRANSFER_SUBMIT_ERROR_TRANSACTION_EXPIRED:   self = .transactionExpired
+        case WK_TRANSFER_SUBMIT_ERROR_TRANSACTION_DUPLICATE: self = .transactionDuplicate
+        case WK_TRANSFER_SUBMIT_ERROR_TRANSACTION:           self = .transaction
+        case WK_TRANSFER_SUBMIT_ERROR_UNKNOWN:               self = .unknown
+
+            // Client
+        case WK_TRANSFER_SUBMIT_ERROR_CLIENT_BAD_REQUEST:  self = .clientBadRequest
+        case WK_TRANSFER_SUBMIT_ERROR_CLIENT_PERMISSION:   self = .clientPermission
+        case WK_TRANSFER_SUBMIT_ERROR_CLIENT_RESOURCE:     self = .clientResource
+        case WK_TRANSFER_SUBMIT_ERROR_CLIENT_BAD_RESPONSE: self = .clientBadResponse
+        case WK_TRANSFER_SUBMIT_ERROR_CLIENT_UNAVAILABLE:  self = .clientUnavailable
+
+            // App
+        case WK_TRANSFER_SUBMIT_ERROR_LOST_CONNECTIVITY:   self = .lostConnectivity
+
+        default: preconditionFailure()
         }
+    }
+}
+
+///
+/// A TransferSubmitError represents a submit error.
+///
+public struct TransferSubmitError: Equatable, Error {
+    let type: TransferSubmitErrorType
+    let details: String?
+
+    internal init (_ core: WKTransferSubmitError) {
+        self.type = TransferSubmitErrorType (core.type);
+
+        var coreVar = core
+        self.details = asUTF8String(wekTransferSubmitErrorGetDetails(&coreVar))
     }
 }
 
 extension TransferSubmitError: CustomStringConvertible {
     public var description: String {
-        switch self {
-        case .unknown: return ".unknown"
-        case let .posix(errno, message): return ".posix(\(errno):\(message ?? ""))"
-        }
+        return "SubmitError: \(type)\(details.map { ": \($0)"} ?? "")"
     }
 }
+
+// MARK: - Attributes
 
 ///
 /// A TransferAttribute is an arbitary {key, value} pair associated with a Transfer; the attribute
@@ -356,26 +394,26 @@ extension TransferSubmitError: CustomStringConvertible {
 /// there is no way to augment an XRP transfer with such a tag.
 ///
 public class TransferAttribute: Hashable {
-    internal let core: BRCryptoTransferAttribute
+    internal let core: WKTransferAttribute
 
     public let key: String
 
     public var value: String? {
-        get { return cryptoTransferAttributeGetValue (core).map (asUTF8String) }
-        set { cryptoTransferAttributeSetValue (core, newValue)}
+        get { return wkTransferAttributeGetValue (core).map (asUTF8String) }
+        set { wkTransferAttributeSetValue (core, newValue)}
     }
 
     public let isRequired: Bool
 
     deinit {
-        cryptoTransferAttributeGive (core)
+        wkTransferAttributeGive (core)
     }
 
-    internal init (core: BRCryptoTransferAttribute, take: Bool) {
-        self.core = (take ? cryptoTransferAttributeTake (core) : core)
+    internal init (core: WKTransferAttribute, take: Bool) {
+        self.core = (take ? wkTransferAttributeTake (core) : core)
 
-        self.key = asUTF8String (cryptoTransferAttributeGetKey (core))
-        self.isRequired = CRYPTO_TRUE == cryptoTransferAttributeIsRequired (core)
+        self.key = asUTF8String (wkTransferAttributeGetKey (core))
+        self.isRequired = WK_TRUE == wkTransferAttributeIsRequired (core)
     }
 
     public static func == (lhs: TransferAttribute, rhs: TransferAttribute) -> Bool {
@@ -398,28 +436,93 @@ public enum TransferAttributeValidationError {
     case mismatchedType
     case relationshipInconsistency
 
-    internal var core: BRCryptoTransferAttributeValidationError {
+    internal var core: WKTransferAttributeValidationError {
         switch self {
         case .requiredButNotProvided:
-            return CRYPTO_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_REQUIRED_BUT_NOT_PROVIDED
+            return WK_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_REQUIRED_BUT_NOT_PROVIDED
         case .mismatchedType:
-            return CRYPTO_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_MISMATCHED_TYPE
+            return WK_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_MISMATCHED_TYPE
         case .relationshipInconsistency:
-            return CRYPTO_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_RELATIONSHIP_INCONSISTENCY
+            return WK_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_RELATIONSHIP_INCONSISTENCY
         }
     }
 
-    internal init (core: BRCryptoTransferAttributeValidationError) {
+    internal init (core: WKTransferAttributeValidationError) {
         switch core {
-        case CRYPTO_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_REQUIRED_BUT_NOT_PROVIDED:
+        case WK_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_REQUIRED_BUT_NOT_PROVIDED:
             self = .requiredButNotProvided
-        case CRYPTO_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_MISMATCHED_TYPE:
+        case WK_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_MISMATCHED_TYPE:
             self = .mismatchedType
-        case CRYPTO_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_RELATIONSHIP_INCONSISTENCY:
+        case WK_TRANSFER_ATTRIBUTE_VALIDATION_ERROR_RELATIONSHIP_INCONSISTENCY:
             self = .relationshipInconsistency
         default:
             preconditionFailure()
         }
+    }
+}
+
+// MARK: - Include Error
+
+///
+/// A TransferIncludeErrorType identifies the type of an include error
+///
+public enum TransferIncludeStatusType {
+    case success
+
+    // failure cases
+    case insufficientNetworkCostUnit
+    case reverted
+    case unknown
+
+    internal init (_ core: WKTransferIncludeStatusType) {
+        switch (core) {
+        case WK_TRANSFER_INCLUDE_STATUS_SUCCESS:          self = .success
+        case WK_TRANSFER_INCLUDE_STATUS_FAILURE_INSUFFICIENT_NETWORK_COST_UNIT: self = .insufficientNetworkCostUnit
+        case WK_TRANSFER_INCLUDE_STATUS_FAILURE_REVERTED: self = .reverted
+        case WK_TRANSFER_INCLUDE_STATUS_FAILURE_UNKNOWN:  self = .unknown
+        default: preconditionFailure()
+        }
+    }
+}
+
+///
+/// A TransferIncludeError represents an include error.
+///
+public struct TransferIncludeStatus: Equatable, Error {
+    public let type: TransferIncludeStatusType
+    public let details: String?
+
+    internal init (_ core: WKTransferIncludeStatus) {
+        self.type = TransferIncludeStatusType (core.type);
+
+        var coreVar = core
+        self.details = asUTF8String(wkTransferIncludeStatusGetDetails (&coreVar))
+    }
+
+    internal static func success () -> TransferIncludeStatus {
+        return TransferIncludeStatus (wkTransferIncludeStatusCreateSuccess())
+    }
+}
+
+extension TransferIncludeStatus: CustomStringConvertible {
+    public var description: String {
+        return "IncludeStatus: \(type)\(details.map { ": \($0)"} ?? "")"
+    }
+}
+
+// MARK: - Confirmation
+///
+/// A TransferConfirmation holds confirmation information.
+///
+public struct TransferConfirmation: Equatable {
+    public let blockNumber: UInt64
+    public let transactionIndex: UInt64
+    public let timestamp: UInt64
+    public let fee: Amount?  // Optional, for now
+    public let status: TransferIncludeStatus
+
+    public var succeeded: Bool {
+        return .success == status.type
     }
 }
 
@@ -435,45 +538,41 @@ public enum TransferState {
     case failed (error: TransferSubmitError)
     case deleted
 
-    internal init (core: BRCryptoTransferState) {
-        defer { cryptoTransferStateGive (core) }
-        switch cryptoTransferStateGetType (core) {
-        case CRYPTO_TRANSFER_STATE_CREATED:   self = .created
-        case CRYPTO_TRANSFER_STATE_SIGNED:    self = .signed
-        case CRYPTO_TRANSFER_STATE_SUBMITTED: self = .submitted
-        case CRYPTO_TRANSFER_STATE_INCLUDED:
+    internal init (core: WKTransferState) {
+        defer { wkTransferStateGive (core) }
+        switch wkTransferStateGetType (core) {
+        case WK_TRANSFER_STATE_CREATED:   self = .created
+        case WK_TRANSFER_STATE_SIGNED:    self = .signed
+        case WK_TRANSFER_STATE_SUBMITTED: self = .submitted
+        case WK_TRANSFER_STATE_INCLUDED:
             var coreBlockNumber      : UInt64 = 0
             var coreBlockTimestamp   : UInt64 = 0
             var coreTransactionIndex : UInt64 = 0
-            var coreFeeBasis         : BRCryptoFeeBasis!
-            var coreSuccess          : BRCryptoBoolean = CRYPTO_TRUE
-            var coreErrorString      : UnsafeMutablePointer<Int8>!
+            var coreFeeBasis         : WKFeeBasis!
+            var coreStatus           = WKTransferIncludeStatus()
 
-            cryptoTransferStateExtractIncluded (core,
-                                                &coreBlockNumber,
-                                                &coreBlockTimestamp,
-                                                &coreTransactionIndex,
-                                                &coreFeeBasis,
-                                                &coreSuccess,
-                                                &coreErrorString);
-            defer { cryptoMemoryFree (coreErrorString) }
+            wkTransferStateExtractIncluded (core,
+                                            &coreBlockNumber,
+                                            &coreBlockTimestamp,
+                                            &coreTransactionIndex,
+                                            &coreFeeBasis,
+                                            &coreStatus)
 
             self = .included (
                 confirmation: TransferConfirmation (blockNumber:      coreBlockNumber,
                                                     transactionIndex: coreTransactionIndex,
                                                     timestamp:        coreBlockTimestamp,
                                                     fee: coreFeeBasis
-                                                        .map { cryptoFeeBasisGetFee ($0) }
+                                                        .map { wkFeeBasisGetFee ($0) }
                                                         .map { Amount (core: $0, take: false) },
-                                                    success: CRYPTO_TRUE == coreSuccess,
-                                                    error: coreErrorString.map { asUTF8String ($0)} ))
+                                                    status: TransferIncludeStatus (coreStatus)))
 
-        case CRYPTO_TRANSFER_STATE_ERRORED:
-            var error = BRCryptoTransferSubmitError()
-            cryptoTransferStateExtractError (core, &error)
-            self = .failed(error: TransferSubmitError (core: error))
-
-        case CRYPTO_TRANSFER_STATE_DELETED:   self = .deleted
+        case WK_TRANSFER_STATE_ERRORED:
+            var coreError = WKTransferSubmitError()
+            wkTransferStateExtractError (core, &coreError)
+            self = .failed (error: TransferSubmitError (coreError))
+            
+        case WK_TRANSFER_STATE_DELETED:   self = .deleted
         default: /* ignore this */ self = .pending; preconditionFailure()
         }
     }
@@ -489,7 +588,7 @@ extension TransferState: CustomStringConvertible {
         case .submitted: return "Submitted"
         case .pending:   return "Pending"
         case .included:  return "Included"
-        case .failed (let error): return "Failed (\(error))"
+        case .failed:    return "Failed"   // See 'error' for details.
         case .deleted:   return "Deleted"
         }
     }
@@ -504,16 +603,16 @@ public enum TransferEvent {
     case deleted
 
     // unused - caution on {old,new}State ownership - will be given
-    init (core: BRCryptoTransferEvent) {
+    init (core: WKTransferEvent) {
         switch core.type {
-        case CRYPTO_TRANSFER_EVENT_CREATED:
+        case WK_TRANSFER_EVENT_CREATED:
             self = .created
 
-        case CRYPTO_TRANSFER_EVENT_CHANGED:
+        case WK_TRANSFER_EVENT_CHANGED:
             self = .changed (old: TransferState (core: core.u.state.old),
                              new: TransferState (core: core.u.state.new))
 
-        case CRYPTO_TRANSFER_EVENT_DELETED:
+        case WK_TRANSFER_EVENT_DELETED:
             self = .deleted
 
         default:
@@ -535,8 +634,8 @@ public struct TransferOutput {
         self.amount = amount
     }
     
-    var core: BRCryptoTransferOutput {
-        return BRCryptoTransferOutput (target: target.core,
+    var core: WKTransferOutput {
+        return WKTransferOutput (target: target.core,
                                        amount: amount.core)
     }
 }
@@ -587,3 +686,4 @@ public protocol TransferFactory {
 //                         amount: Amount,
 //                         feeBasis: TransferFeeBasis) -> Transfer? // T
 }
+

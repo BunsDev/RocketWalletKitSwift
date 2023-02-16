@@ -1,5 +1,5 @@
 //
-//  BRCryptoSigner.swift
+//  WKSigner.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 7/18/19.
@@ -46,25 +46,25 @@ public final class CoreSigner: Signer {
 
     /// Does not support 'recovery'
     public static var basicDER: CoreSigner {
-        return CoreSigner (core: cryptoSignerCreate (CRYPTO_SIGNER_BASIC_DER)!)
+        return CoreSigner (core: wkSignerCreate (WK_SIGNER_BASIC_DER)!)
     }
 
     /// Does not support 'recovery'
     public static var basicJOSE: CoreSigner {
-        return CoreSigner (core: cryptoSignerCreate (CRYPTO_SIGNER_BASIC_JOSE)!)
+        return CoreSigner (core: wkSignerCreate (WK_SIGNER_BASIC_JOSE)!)
     }
 
     /// Does support 'recovery'
     public static var compact: CoreSigner {
-        return CoreSigner (core: cryptoSignerCreate (CRYPTO_SIGNER_COMPACT)!)
+        return CoreSigner (core: wkSignerCreate (WK_SIGNER_COMPACT)!)
     }
 
     // The Core representation
-    internal let core: BRCryptoSigner
+    internal let core: WKSigner
 
-    deinit { cryptoSignerGive (core) }
+    deinit { wkSignerGive (core) }
 
-    internal init (core: BRCryptoSigner) {
+    internal init (core: WKSigner) {
         self.core = core
     }
 
@@ -79,18 +79,18 @@ public final class CoreSigner: Signer {
             // Confirm `data32 digest` is 32 bytes
             precondition (32 == digestCount)
 
-            let targetCount = cryptoSignerSignLength(self.core, key, digestAddr, digestCount)
+            let targetCount = wkSignerSignLength(self.core, key, digestAddr, digestCount)
             guard targetCount != 0 else { return nil }
 
-            var result = CRYPTO_FALSE
+            var result = WK_FALSE
             var target = Data (count: targetCount)
             target.withUnsafeMutableBytes { (targetBytes: UnsafeMutableRawBufferPointer) -> Void in
                 let targetAddr  = targetBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
 
-                result = cryptoSignerSign(self.core, key, targetAddr, targetCount, digestAddr, digestCount)
+                result = wkSignerSign(self.core, key, targetAddr, targetCount, digestAddr, digestCount)
             }
 
-            return result == CRYPTO_TRUE ? target : nil
+            return result == WK_TRUE ? target : nil
         }
     }
 
@@ -106,7 +106,7 @@ public final class CoreSigner: Signer {
             return signature.withUnsafeBytes { (signatureBytes: UnsafeRawBufferPointer) -> Key? in
                 let signatureAddr  = signatureBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
 
-                return cryptoSignerRecover (self.core, digestAddr, digestCount, signatureAddr, signatureCount)
+                return wkSignerRecover (self.core, digestAddr, digestCount, signatureAddr, signatureCount)
                     .map { Key (core: $0) }
             }
         }

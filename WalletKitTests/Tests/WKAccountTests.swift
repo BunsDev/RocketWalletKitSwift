@@ -1,9 +1,9 @@
 //
-//  BRCryptoAccountTests.swift
+//  WKAccountTests.swift
 //  WalletKitTests
 //
 //  Created by Ed Gamble on 3/21/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -12,7 +12,7 @@
 import XCTest
 @testable import WalletKit
 
-class BRCryptoAccountTests: XCTestCase {
+class WKAccountTests: XCTestCase {
 
     let dateFormatter = DateFormatter()
 
@@ -29,20 +29,20 @@ class BRCryptoAccountTests: XCTestCase {
     }
 
     func testPhrase () {
-        XCTAssertTrue  (Account.validatePhrase (self.phrase, words: BRCryptoAccountTests.words))
+        XCTAssertTrue  (Account.validatePhrase (self.phrase, words: WKAccountTests.words))
 
-        guard let (phrase, _) = Account.generatePhrase (words: BRCryptoAccountTests.words)
+        guard let (phrase, _) = Account.generatePhrase (words: WKAccountTests.words)
             else { XCTAssert (false); return }
 
-        XCTAssertTrue  (Account.validatePhrase (phrase, words: BRCryptoAccountTests.words))
-        XCTAssertFalse (Account.validatePhrase ("Ask @jmo for a pithy quote", words: BRCryptoAccountTests.words))
+        XCTAssertTrue  (Account.validatePhrase (phrase, words: WKAccountTests.words))
+        XCTAssertFalse (Account.validatePhrase ("Ask @jmo for a pithy quote", words: WKAccountTests.words))
     }
 
     func testAccount () {
         let timestamp = dateFormatter.date(from: date)!
 
         let walletId = UUID (uuidString: "5766b9fa-e9aa-4b6d-9b77-b5f1136e5e96")?.uuidString ?? "empty-wallet-id"
-        guard let a1 = Account.createFrom (phrase: phrase, timestamp: timestamp, uids: walletId)
+        guard let a1 = Account.createFrom (phrase: phrase, timestamp: timestamp, uids: walletId, isMainnet: false)
             else { XCTAssert(false); return}
 
         // XCTAssertEqual (a1.addressAsETH, address)
@@ -56,12 +56,21 @@ class BRCryptoAccountTests: XCTestCase {
         // XCTAssertEqual (a2.addressAsETH, a1.addressAsETH);
         XCTAssertEqual (a2.uids, walletId)
 
-        guard let (phrase3, timestamp3) = Account.generatePhrase (words: BRCryptoAccountTests.words),
-            let a3 = Account.createFrom (phrase: phrase3, timestamp: timestamp3, uids: "ignore")
+        guard let (phrase3, timestamp3) = Account.generatePhrase (words: WKAccountTests.words),
+              let a3 = Account.createFrom (phrase: phrase3, timestamp: timestamp3, uids: "ignore", isMainnet: false)
             else { XCTAssert (false); return }
 
         XCTAssertFalse (a3.validate(serialization: a1.serialize))
 
+        let a1Ser  = a1.serialize
+        
+        // Verify incorrect serialization detected through validation
+        var a1Bytes = [UInt8](a1Ser)
+        a1Bytes[a1Bytes.count-1] = ~a1Bytes[a1Bytes.count-1]
+        let modSerData = Data(a1Bytes)
+        XCTAssertFalse (a1.validate(serialization: modSerData))
+        
+        
         let _ = Account (core: a2.core, take: true)
     }
 
@@ -155,7 +164,7 @@ class BRCryptoAccountTests: XCTestCase {
         let network = Network.findBuiltin (uids: "ripple-mainnet")!
 
         XCTAssertEqual (Address.create (string: "r41vZ8exoVyUfVzs56yeN8xB5gDhSkho9a", network: network)?.description,
-                        "r41vZ8exoVyUfVzs56yeN8xB5gDhSkho9a")
+                       "r41vZ8exoVyUfVzs56yeN8xB5gDhSkho9a")
 
         XCTAssertNil (Address.create (string: "w41vZ8exoVyUfVzs56yeN8xB5gDhSkho9a", network: network))
 
@@ -173,7 +182,7 @@ class BRCryptoAccountTests: XCTestCase {
         let network = Network.findBuiltin (uids: "hedera-mainnet")!
 
         XCTAssertEqual (Address.create (string: "0.0.14222", network: network)?.description,
-                        "0.0.14222")
+                       "0.0.14222")
 
         XCTAssertNil (Address.create (string: "0.0.x14222", network: network))
 
@@ -204,7 +213,6 @@ class BRCryptoAccountTests: XCTestCase {
         XCTAssertFalse (a1 == a2)
         XCTAssertTrue  (a2 == a3)
     }
-
 
 /*
         let addr1 = bch.addressFor("bitcoincash:qp0k6fs6q2hzmpyps3vtwmpx80j9w0r0acmp8l6e9v") // cashaddr with prefix is valid

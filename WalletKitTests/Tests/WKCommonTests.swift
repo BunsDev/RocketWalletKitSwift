@@ -1,5 +1,5 @@
 //
-//  BRCryptoCommonTests.swift
+//  WKCommonTests.swift
 //  WalletKitTests
 //
 //  Created by Ed Gamble on 7/18/19.
@@ -13,7 +13,7 @@ import XCTest
 import Foundation
 @testable import WalletKit
 
-class BRCryptoCommonTests: XCTestCase {
+class WKCommonTests: XCTestCase {
 
     override func setUp() { }
 
@@ -119,28 +119,28 @@ class BRCryptoCommonTests: XCTestCase {
 
         phrases.forEach { (phrase) in
             // BIP39
-            k = Key.createFrom (phrase: phrase, words: BRCryptoAccountTests.words)
+            k = Key.createFrom (phrase: phrase, words: WKAccountTests.words)
             XCTAssertNotNil(k)
             XCTAssertNotNil (Key.createFromString(asPrivate: k.encodeAsPrivate))
             k = Key.createFrom (phrase: phrase, words: nil)
             XCTAssertNil(k)
-            k = Key.createFrom (phrase: "not-a-chance", words: BRCryptoAccountTests.words)
+            k = Key.createFrom (phrase: "not-a-chance", words: WKAccountTests.words)
             XCTAssertNil(k)
 
             // BIP32ApiAuth
-            k = Key.createForBIP32ApiAuth (phrase: phrase, words: BRCryptoAccountTests.words)
+            k = Key.createForBIP32ApiAuth (phrase: phrase, words: WKAccountTests.words)
             XCTAssertNotNil(k)
             XCTAssertNotNil (Key.createFromString(asPrivate: k.encodeAsPrivate))
             k = Key.createForBIP32ApiAuth (phrase: phrase, words: nil)
             XCTAssertNil(k)
-            k = Key.createForBIP32ApiAuth (phrase: "not-a-chance", words: BRCryptoAccountTests.words)
+            k = Key.createForBIP32ApiAuth (phrase: "not-a-chance", words: WKAccountTests.words)
             XCTAssertNil(k)
 
             // BIP32BitID
             k = Key.createForBIP32BitID (phrase: phrase,
                                          index: 2,
                                          uri: "some uri",
-                                         words: BRCryptoAccountTests.words)
+                                         words: WKAccountTests.words)
             XCTAssertNotNil(k)
             XCTAssertNotNil (Key.createFromString(asPrivate: k.encodeAsPrivate))
             k = Key.createForBIP32BitID (phrase: phrase,
@@ -151,7 +151,7 @@ class BRCryptoCommonTests: XCTestCase {
             k = Key.createForBIP32BitID (phrase: "not-a-chance",
                                          index: 2,
                                          uri: "some uri",
-                                         words: BRCryptoAccountTests.words)
+                                         words: WKAccountTests.words)
             XCTAssertNil(k)
         }
 

@@ -1,5 +1,5 @@
 //
-//  BRCryptoAddress.swift
+//  WKAddress.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 6/7/19.
@@ -14,18 +14,18 @@ import WalletKitCore
 /// An Address for transferring an amount.  Addresses are network specific.
 ///
 public final class Address: Equatable, CustomStringConvertible {
-    let core: BRCryptoAddress
+    let core: WKAddress
 
-    internal init (core: BRCryptoAddress, take: Bool) {
-        self.core = take ? cryptoAddressTake(core) : core
+    internal init (core: WKAddress, take: Bool) {
+        self.core = take ? wkAddressTake(core) : core
     }
 
-    internal convenience init (core: BRCryptoAddress) {
+    internal convenience init (core: WKAddress) {
         self.init (core: core, take: true)
     }
 
     public private(set) lazy var description: String = {
-        return asUTF8String (cryptoAddressAsString (core), true)
+        return asUTF8String (wkAddressAsString (core), true)
     }()
 
     ///
@@ -44,16 +44,16 @@ public final class Address: Equatable, CustomStringConvertible {
     /// - Returns: An address or nil if `string` is invalide for `network`
     ///
     public static func create (string: String, network: Network) -> Address? {
-        return cryptoNetworkCreateAddress (network.core, string)
+        return wkNetworkCreateAddress (network.core, string)
             .map { Address (core: $0, take: false) }
     }
 
     deinit {
-        cryptoAddressGive (core)
+        wkAddressGive (core)
     }
 
     public static func == (lhs: Address, rhs: Address) -> Bool {
-        return CRYPTO_TRUE == cryptoAddressIsIdentical (lhs.core, rhs.core)
+        return WK_TRUE == wkAddressIsIdentical (lhs.core, rhs.core)
     }
 }
 
@@ -70,20 +70,20 @@ public enum AddressScheme: Equatable, CustomStringConvertible {
     case native
 
 
-    internal init (core: BRCryptoAddressScheme) {
+    internal init (core: WKAddressScheme) {
         switch core {
-        case CRYPTO_ADDRESS_SCHEME_BTC_LEGACY:  self = .btcLegacy
-        case CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT:  self = .btcSegwit
-        case CRYPTO_ADDRESS_SCHEME_NATIVE:      self = .native
+        case WK_ADDRESS_SCHEME_BTC_LEGACY:  self = .btcLegacy
+        case WK_ADDRESS_SCHEME_BTC_SEGWIT:  self = .btcSegwit
+        case WK_ADDRESS_SCHEME_NATIVE:      self = .native
         default: self = .native;  preconditionFailure()
         }
     }
 
-    internal var core: BRCryptoAddressScheme {
+    internal var core: WKAddressScheme {
         switch self {
-        case .btcLegacy:  return CRYPTO_ADDRESS_SCHEME_BTC_LEGACY
-        case .btcSegwit:  return CRYPTO_ADDRESS_SCHEME_BTC_SEGWIT
-        case .native:     return CRYPTO_ADDRESS_SCHEME_NATIVE
+        case .btcLegacy:  return WK_ADDRESS_SCHEME_BTC_LEGACY
+        case .btcSegwit:  return WK_ADDRESS_SCHEME_BTC_SEGWIT
+        case .native:     return WK_ADDRESS_SCHEME_NATIVE
         }
     }
 

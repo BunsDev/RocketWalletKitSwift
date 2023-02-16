@@ -1,9 +1,9 @@
 //
-//  BRCryptoBaseTests.swift
+//  WKBaseTests.swift
 //  WalletKitTests
 //
 //  Created by Ed Gamble on 3/28/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -12,7 +12,7 @@
 import XCTest
 @testable import WalletKit
 
-class BRCryptoBaseTests: XCTestCase {
+class WKBaseTests: XCTestCase {
     var accountSpecifications: [AccountSpecification] = []
     var accountSpecification: AccountSpecification! {
         return accountSpecifications.count > 0
@@ -22,7 +22,7 @@ class BRCryptoBaseTests: XCTestCase {
 
     var isMainnet = true
 
-    // let configPath = Bundle(for: BRCryptoBaseTests.self).path(forResource: "CoreTestsConfig", ofType: "json") ?? "foo"
+    // let configPath = Bundle(for: WKBaseTests.self).path(forResource: "CoreTestsConfig", ofType: "json") ?? "foo"
 
     var coreDataDir: String!
 
@@ -90,7 +90,8 @@ class BRCryptoBaseTests: XCTestCase {
         let walletId = UUID (uuidString: "5766b9fa-e9aa-4b6d-9b77-b5f1136e5e96")?.uuidString ?? "empty-wallet-id"
         account = Account.createFrom (phrase: accountSpecification.paperKey,
                                       timestamp: accountSpecification.timestamp,
-                                      uids: walletId)
+                                      uids: walletId,
+                                      isMainnet: isMainnet)
 
 
     }
@@ -410,7 +411,7 @@ class CryptoTestSystemListener: SystemListener {
     }
 }
 
-class BRCryptoSystemBaseTests: BRCryptoBaseTests {
+class WKSystemBaseTests: WKBaseTests {
 
     var listener: CryptoTestSystemListener!
     var client: SystemClient!

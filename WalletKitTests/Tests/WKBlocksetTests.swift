@@ -12,7 +12,7 @@
 import XCTest
 @testable import WalletKit
 
-class BRCryptoBlocksetTests: XCTestCase {
+class WKBlocksetTests: XCTestCase {
     var client: SystemClient! = nil
     var expectation: XCTestExpectation!
 

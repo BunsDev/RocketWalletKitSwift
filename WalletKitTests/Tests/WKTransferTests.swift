@@ -1,9 +1,9 @@
 //
-//  BRCryptoTransferTests.swift
+//  WKTransferTests.swift
 //  WalletKitTests
 //
 //  Created by Ed Gamble on 1/11/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -49,7 +49,7 @@ struct TransferResult {
     }
 }
 
-class BRCryptoTransferTests: BRCryptoSystemBaseTests {
+class WKTransferTests: WKSystemBaseTests {
     var syncTimeoutInSeconds = 120.0
 
     /// Recv: 0.00010000
@@ -83,8 +83,7 @@ class BRCryptoTransferTests: BRCryptoSystemBaseTests {
                                                                     ? 1565974068
                                                                     : 1565974410),
                                                                 fee: nil,
-                                                                success: true,
-                                                                error: nil),
+                                                                status: TransferIncludeStatus.success()),
                             hash: "0xf6d9bca3d4346ce75c151d1d8f061d56ff25e41a89553544b80d316f7d9ccedc",
                             amount: UInt64(1000000))
         ]
@@ -388,8 +387,7 @@ class BRCryptoTransferTests: BRCryptoSystemBaseTests {
                                                  transactionIndex: 2,
                                                  timestamp: 3,
                                                  fee: nil,
-                                                 success: true,
-                                                 error: nil)
+                                                 status: TransferIncludeStatus.success())
         XCTAssertEqual(1, confirmation.blockNumber)
         XCTAssertEqual(2, confirmation.transactionIndex)
         XCTAssertEqual(3, confirmation.timestamp)
@@ -409,7 +407,7 @@ class BRCryptoTransferTests: BRCryptoSystemBaseTests {
     }
 
     func testTransferState () {
-        // XCTAssertEqual (TransferState.created, TransferState(core: CRYPTO_TRANSFER_STATE_CREATED))
+        // XCTAssertEqual (TransferState.created, TransferState(core: WK_TRANSFER_STATE_CREATED))
         // ...
     }
     #endif

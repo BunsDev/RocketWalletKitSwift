@@ -1,9 +1,9 @@
 //
-//  BRCryptoPayment.swift
+//  WKPayment.swift
 //  WalletKit
 //
 //  Created by Michael Carrara on 8/27/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -18,14 +18,14 @@ public enum PaymentProtocolError: Error {
     case signatureVerificationFailed
     case requestExpired
 
-    internal init? (_ core: BRCryptoPaymentProtocolError) {
+    internal init? (_ core: WKPaymentProtocolError) {
         switch core {
-        case CRYPTO_PAYMENT_PROTOCOL_ERROR_NONE:                          return nil
-        case CRYPTO_PAYMENT_PROTOCOL_ERROR_CERT_MISSING:                  self = .certificateMissing
-        case CRYPTO_PAYMENT_PROTOCOL_ERROR_CERT_NOT_TRUSTED:              self = .certificateNotTrusted
-        case CRYPTO_PAYMENT_PROTOCOL_ERROR_SIGNATURE_TYPE_NOT_SUPPORTED:  self = .signatureTypeUnsupported
-        case CRYPTO_PAYMENT_PROTOCOL_ERROR_SIGNATURE_VERIFICATION_FAILED: self = .signatureVerificationFailed
-        case CRYPTO_PAYMENT_PROTOCOL_ERROR_EXPIRED:                       self = .requestExpired
+        case WK_PAYMENT_PROTOCOL_ERROR_NONE:                          return nil
+        case WK_PAYMENT_PROTOCOL_ERROR_CERT_MISSING:                  self = .certificateMissing
+        case WK_PAYMENT_PROTOCOL_ERROR_CERT_NOT_TRUSTED:              self = .certificateNotTrusted
+        case WK_PAYMENT_PROTOCOL_ERROR_SIGNATURE_TYPE_NOT_SUPPORTED:  self = .signatureTypeUnsupported
+        case WK_PAYMENT_PROTOCOL_ERROR_SIGNATURE_VERIFICATION_FAILED: self = .signatureVerificationFailed
+        case WK_PAYMENT_PROTOCOL_ERROR_EXPIRED:                       self = .requestExpired
         default: self = .signatureVerificationFailed; preconditionFailure()
         }
     }
@@ -35,10 +35,10 @@ public enum PaymentProtocolRequestType {
     case bip70
     case bitPay
 
-    fileprivate init (_ core: BRCryptoPaymentProtocolType) {
+    fileprivate init (_ core: WKPaymentProtocolType) {
         switch core {
-        case CRYPTO_PAYMENT_PROTOCOL_TYPE_BIP70:  self = .bip70
-        case CRYPTO_PAYMENT_PROTOCOL_TYPE_BITPAY: self = .bitPay
+        case WK_PAYMENT_PROTOCOL_TYPE_BIP70:  self = .bip70
+        case WK_PAYMENT_PROTOCOL_TYPE_BITPAY: self = .bitPay
         default: self = .bip70; preconditionFailure()
         }
     }
@@ -48,7 +48,7 @@ public final class PaymentProtocolRequest {
 
     public static func create(wallet: Wallet,
                               forBitPay json: Data) -> PaymentProtocolRequest?  {
-        guard CRYPTO_TRUE == cryptoPaymentProtocolRequestValidateSupported (CRYPTO_PAYMENT_PROTOCOL_TYPE_BITPAY,
+        guard WK_TRUE == wkPaymentProtocolRequestValidateSupported (WK_PAYMENT_PROTOCOL_TYPE_BITPAY,
                                                                             wallet.manager.network.core,
                                                                             wallet.currency.core,
                                                                             wallet.core) else { return nil }
@@ -61,7 +61,7 @@ public final class PaymentProtocolRequest {
 
         guard let req = try? decoder.decode(BitPayRequest.self, from: json) else { return nil }
 
-        guard let builder = cryptoPaymentProtocolRequestBitPayBuilderCreate (wallet.manager.network.core,
+        guard let builder = wkPaymentProtocolRequestBitPayBuilderCreate (wallet.manager.network.core,
                                                                              wallet.currency.core,
                                                                              PaymentProtocolRequest.bitPayAndBip70Callbacks,
                                                                              req.network,
@@ -72,15 +72,15 @@ public final class PaymentProtocolRequest {
                                                                              req.paymentUrl.absoluteString,
                                                                              nil,
                                                                              0) else { return nil }
-        defer { cryptoPaymentProtocolRequestBitPayBuilderGive (builder) }
+        defer { wkPaymentProtocolRequestBitPayBuilderGive (builder) }
 
         for output in req.outputs {
-            cryptoPaymentProtocolRequestBitPayBuilderAddOutput (builder,
+            wkPaymentProtocolRequestBitPayBuilderAddOutput (builder,
                                                                 output.address,
                                                                 output.amount)
         }
 
-        return cryptoPaymentProtocolRequestBitPayBuilderBuild (builder)
+        return wkPaymentProtocolRequestBitPayBuilderBuild (builder)
             .map { PaymentProtocolRequest(core: $0,
                                           wallet: wallet)
         }
@@ -88,13 +88,13 @@ public final class PaymentProtocolRequest {
 
     public static func create(wallet: Wallet,
                               forBip70 serialization: Data) -> PaymentProtocolRequest? {
-        guard CRYPTO_TRUE == cryptoPaymentProtocolRequestValidateSupported (CRYPTO_PAYMENT_PROTOCOL_TYPE_BIP70,
+        guard WK_TRUE == wkPaymentProtocolRequestValidateSupported (WK_PAYMENT_PROTOCOL_TYPE_BIP70,
                                                                             wallet.manager.network.core,
                                                                             wallet.currency.core,
                                                                             wallet.core) else { return nil }
 
         var bytes = [UInt8](serialization)
-        return cryptoPaymentProtocolRequestCreateForBip70 (wallet.manager.network.core,
+        return wkPaymentProtocolRequestCreateForBip70 (wallet.manager.network.core,
                                                            wallet.currency.core,
                                                            PaymentProtocolRequest.bitPayAndBip70Callbacks,
                                                            &bytes,
@@ -105,52 +105,52 @@ public final class PaymentProtocolRequest {
     }
 
     public var type: PaymentProtocolRequestType {
-        return PaymentProtocolRequestType(cryptoPaymentProtocolRequestGetType (core))
+        return PaymentProtocolRequestType(wkPaymentProtocolRequestGetType (core))
     }
 
     public var isSecure: Bool {
-        return CRYPTO_TRUE == cryptoPaymentProtocolRequestIsSecure (core)
+        return WK_TRUE == wkPaymentProtocolRequestIsSecure (core)
     }
 
     public var memo: String? {
-        return cryptoPaymentProtocolRequestGetMemo (core)
+        return wkPaymentProtocolRequestGetMemo (core)
             .map { asUTF8String($0) }
     }
 
     public var paymentURL: String? {
-        return cryptoPaymentProtocolRequestGetPaymentURL (core)
+        return wkPaymentProtocolRequestGetPaymentURL (core)
             .map { asUTF8String($0) }
     }
 
     public var totalAmount: Amount? {
-        return cryptoPaymentProtocolRequestGetTotalAmount (core)
+        return wkPaymentProtocolRequestGetTotalAmount (core)
             .map { Amount (core: $0, take: false)  }
     }
 
     public var primaryTarget: Address? {
-        return cryptoPaymentProtocolRequestGetPrimaryTargetAddress (core)
+        return wkPaymentProtocolRequestGetPrimaryTargetAddress (core)
             .map { Address (core: $0, take: false)  }
     }
 
     public private(set) lazy var commonName: String? = {
-        return cryptoPaymentProtocolRequestGetCommonName(core)
+        return wkPaymentProtocolRequestGetCommonName(core)
             .map { asUTF8String ($0, true) }
     }()
 
     private lazy var error: PaymentProtocolError? = {
-        return PaymentProtocolError(cryptoPaymentProtocolRequestIsValid(core))
+        return PaymentProtocolError(wkPaymentProtocolRequestIsValid(core))
     }()
 
     public var requiredNetworkFee: NetworkFee? {
-        return cryptoPaymentProtocolRequestGetRequiredNetworkFee (core)
+        return wkPaymentProtocolRequestGetRequiredNetworkFee (core)
             .map { NetworkFee (core: $0, take: false) }
     }
 
-    internal let core: BRCryptoPaymentProtocolRequest
+    internal let core: WKPaymentProtocolRequest
     private let manager: WalletManager
     private let wallet: Wallet
 
-    private init(core: BRCryptoPaymentProtocolRequest,
+    private init(core: WKPaymentProtocolRequest,
                  wallet: Wallet) {
         self.core = core
         self.manager = wallet.manager
@@ -185,10 +185,10 @@ public final class PaymentProtocolRequest {
     }
 
     deinit {
-        cryptoPaymentProtocolRequestGive (core)
+        wkPaymentProtocolRequestGive (core)
     }
 
-    fileprivate static let bitPayAndBip70Callbacks: BRCryptoPayProtReqBitPayAndBip70Callbacks = BRCryptoPayProtReqBitPayAndBip70Callbacks (
+    fileprivate static let bitPayAndBip70Callbacks: WKPayProtReqBitPayAndBip70Callbacks = WKPayProtReqBitPayAndBip70Callbacks (
             context: nil,
             validator: { (req, ctx, pkiType, expires, certBytes, certLengths, certsSz, digest, digestLen, signature, signatureLen) in
                 #if !os(Linux) && !os(macOS)
@@ -213,7 +213,7 @@ public final class PaymentProtocolRequest {
 
                     // .unspecified indicates a positive result that wasn't decided by the user
                     guard trustResult == .unspecified || trustResult == .proceed else {
-                        return certs.isEmpty ? CRYPTO_PAYMENT_PROTOCOL_ERROR_CERT_MISSING : CRYPTO_PAYMENT_PROTOCOL_ERROR_CERT_NOT_TRUSTED
+                        return certs.isEmpty ? WK_PAYMENT_PROTOCOL_ERROR_CERT_MISSING : WK_PAYMENT_PROTOCOL_ERROR_CERT_NOT_TRUSTED
                     }
 
                     var status = errSecUnimplemented
@@ -230,20 +230,20 @@ public final class PaymentProtocolRequest {
 
                     guard status == errSecSuccess else {
                         if status == errSecUnimplemented {
-                            return CRYPTO_PAYMENT_PROTOCOL_ERROR_SIGNATURE_TYPE_NOT_SUPPORTED
+                            return WK_PAYMENT_PROTOCOL_ERROR_SIGNATURE_TYPE_NOT_SUPPORTED
                         } else {
-                            return CRYPTO_PAYMENT_PROTOCOL_ERROR_SIGNATURE_VERIFICATION_FAILED
+                            return WK_PAYMENT_PROTOCOL_ERROR_SIGNATURE_VERIFICATION_FAILED
                         }
                     }
                 }
 
                 guard expires == 0 || NSDate.timeIntervalSinceReferenceDate <= Double(expires) else {
-                    return CRYPTO_PAYMENT_PROTOCOL_ERROR_EXPIRED
+                    return WK_PAYMENT_PROTOCOL_ERROR_EXPIRED
                 }
 
-                return CRYPTO_PAYMENT_PROTOCOL_ERROR_NONE
+                return WK_PAYMENT_PROTOCOL_ERROR_NONE
                 #else // os(Linux)
-                return CRYPTO_PAYMENT_PROTOCOL_ERROR_SIGNATURE_TYPE_NOT_SUPPORTED
+                return WK_PAYMENT_PROTOCOL_ERROR_SIGNATURE_TYPE_NOT_SUPPORTED
                 #endif
             },
             nameExtractor: { (req, ctx, pkiType, certBytes, certLengths, certsSz) in
@@ -278,21 +278,21 @@ public final class PaymentProtocolPayment {
     fileprivate static func create(request: PaymentProtocolRequest,
                                    transfer: Transfer,
                                    refund: Address) -> PaymentProtocolPayment? {
-        return cryptoPaymentProtocolPaymentCreate (request.core,
+        return wkPaymentProtocolPaymentCreate (request.core,
                                                    transfer.core,
                                                    refund.core)
             .map { PaymentProtocolPayment (core: $0) }
     }
 
-    private let core: BRCryptoPaymentProtocolPayment
+    private let core: WKPaymentProtocolPayment
 
-    private init (core: BRCryptoPaymentProtocolPayment) {
+    private init (core: WKPaymentProtocolPayment) {
         self.core = core
     }
 
     public func encode() -> Data? {
         var bytesCount: Int = 0
-        if let bytes = cryptoPaymentProtocolPaymentEncode (core, &bytesCount) {
+        if let bytes = wkPaymentProtocolPaymentEncode (core, &bytesCount) {
             defer { free (bytes) }
             return Data (bytes: bytes, count: bytesCount)
         }
@@ -300,7 +300,7 @@ public final class PaymentProtocolPayment {
     }
 
     deinit {
-        cryptoPaymentProtocolPaymentGive(core)
+        wkPaymentProtocolPaymentGive(core)
     }
 }
 
@@ -313,13 +313,13 @@ public final class PaymentProtocolPaymentACK {
 
     public static func create(forBip70 serialization: Data) -> PaymentProtocolPaymentACK? {
         var bytes = [UInt8](serialization)
-        return cryptoPaymentProtocolPaymentACKCreateForBip70 (&bytes, bytes.count)
+        return wkPaymentProtocolPaymentACKCreateForBip70 (&bytes, bytes.count)
             .map { PaymentProtocolPaymentACK (core: $0) }
     }
 
     private let impl: Impl
 
-    private init(core: BRCryptoPaymentProtocolPaymentACK){
+    private init(core: WKPaymentProtocolPaymentACK){
         self.impl = .core(core)
     }
 
@@ -332,13 +332,13 @@ public final class PaymentProtocolPaymentACK {
     }
 
     private enum Impl {
-        case core (BRCryptoPaymentProtocolPaymentACK)
+        case core (WKPaymentProtocolPaymentACK)
         case bitPay (BitPayAck)
 
         fileprivate var memo: String? {
             switch self {
             case .core (let core):
-                return cryptoPaymentProtocolPaymentACKGetMemo (core)
+                return wkPaymentProtocolPaymentACKGetMemo (core)
                     .map { asUTF8String ($0) }
             case .bitPay (let ack):
                 return ack.memo
@@ -348,7 +348,7 @@ public final class PaymentProtocolPaymentACK {
         fileprivate func give() {
             switch self {
             case .core (let core):
-                cryptoPaymentProtocolPaymentACKGive (core)
+                wkPaymentProtocolPaymentACKGive (core)
             case .bitPay:
                 break
             }

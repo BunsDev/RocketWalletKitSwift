@@ -1,9 +1,9 @@
 //
-//  BRCryptoWallet.swift
+//  WKWallet.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 3/27/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -17,7 +17,7 @@ import WalletKitCore
 public final class Wallet: Equatable {
 
     /// The Core representation
-    internal let core: BRCryptoWallet
+    internal let core: WKWallet
 
     /// The owning manager
     public let manager: WalletManager
@@ -46,24 +46,24 @@ public final class Wallet: Equatable {
 
     /// The current balance for currency
     public var balance: Amount {
-        return Amount (core: cryptoWalletGetBalance (core), take: false)
+        return Amount (core: wkWalletGetBalance (core), take: false)
     }
 
     /// The maximum balance
     public var balanceMaximum: Amount? {
-        return cryptoWalletGetBalanceMaximum (core)
+        return wkWalletGetBalanceMaximum (core)
             .map { Amount (core: $0, take: false) }
     }
 
     /// The minimum balance
     public var balanceMinimum: Amount? {
-        return cryptoWalletGetBalanceMinimum (core)
+        return wkWalletGetBalanceMinimum (core)
             .map { Amount (core: $0, take: false) }
     }
 
     /// The current state.
     public var state: WalletState {
-        return WalletState (core: cryptoWalletGetState(core))
+        return WalletState (core: wkWalletGetState(core))
     }
 
     /// The default TransferFactory for creating transfers.
@@ -75,7 +75,7 @@ public final class Wallet: Equatable {
     }
 
     public func targetForScheme (_ scheme: AddressScheme) -> Address {
-        return Address (core: cryptoWalletGetAddress (core, scheme.core), take: false)
+        return Address (core: wkWalletGetAddress (core, scheme.core), take: false)
     }
 
     /// TODO: `var {targets,sources}: [Address]` - for query needs?
@@ -87,7 +87,7 @@ public final class Wallet: Equatable {
     /// - Parameter address: the address to check
     ///
     public func hasAddress (_ address: Address) -> Bool {
-        return cryptoWalletHasAddress (core, address.core);
+        return wkWalletHasAddress (core, address.core);
     }
 
     ///
@@ -101,11 +101,11 @@ public final class Wallet: Equatable {
     }()
 
     public func transferAttributesFor (target: Address?) -> Set<TransferAttribute> {
-        let coreAttributes = (0..<cryptoWalletGetTransferAttributeCount(core, target?.core))
-            .map { cryptoWalletGetTransferAttributeAt (core, target?.core, $0)! }
-        defer { coreAttributes.forEach (cryptoTransferAttributeGive) }
+        let coreAttributes = (0..<wkWalletGetTransferAttributeCount(core, target?.core))
+            .map { wkWalletGetTransferAttributeAt (core, target?.core, $0)! }
+        defer { coreAttributes.forEach (wkTransferAttributeGive) }
 
-        return Set (coreAttributes.map { TransferAttribute (core: cryptoTransferAttributeCopy($0), take: false) })
+        return Set (coreAttributes.map { TransferAttribute (core: wkTransferAttributeCopy($0), take: false) })
     }
     ///
     /// Validate a TransferAttribute.  This returns `true` if the attributes value is valid and,
@@ -116,9 +116,9 @@ public final class Wallet: Equatable {
     public func validateTransferAttribute (_ attribute: TransferAttribute) -> TransferAttributeValidationError? {
         let coreAttribute = attribute.core
 
-        var validates: BRCryptoBoolean = CRYPTO_TRUE
-        let error = cryptoWalletValidateTransferAttribute (core, coreAttribute, &validates)
-        return CRYPTO_TRUE == validates ? nil : TransferAttributeValidationError (core: error)
+        var validates: WKBoolean = WK_TRUE
+        let error = wkWalletValidateTransferAttribute (core, coreAttribute, &validates)
+        return WK_TRUE == validates ? nil : TransferAttributeValidationError (core: error)
     }
 
     ///
@@ -132,25 +132,25 @@ public final class Wallet: Equatable {
     ///
     public func validateTransferAttributes (_ attributes: Set<TransferAttribute>) -> TransferAttributeValidationError? {
         let coreAttributesCount = attributes.count
-        var coreAttributes: [BRCryptoTransferAttribute?] = attributes.map { $0.core }
+        var coreAttributes: [WKTransferAttribute?] = attributes.map { $0.core }
 
-        var validates: BRCryptoBoolean = CRYPTO_TRUE
-        let error = cryptoWalletValidateTransferAttributes (core,
+        var validates: WKBoolean = WK_TRUE
+        let error = wkWalletValidateTransferAttributes (core,
                                                             coreAttributesCount,
                                                             &coreAttributes,
                                                             &validates)
-        return CRYPTO_TRUE == validates ? nil : TransferAttributeValidationError (core: error)
+        return WK_TRUE == validates ? nil : TransferAttributeValidationError (core: error)
     }
 
 
     /// The transfers of currency yielding `balance`
     public var transfers: [Transfer] {
-        var transfersCount: BRCryptoCount = 0
-        let transfersPtr = cryptoWalletGetTransfers(core, &transfersCount);
-        defer { if let ptr = transfersPtr { cryptoMemoryFree (ptr) } }
+        var transfersCount: WKCount = 0
+        let transfersPtr = wkWalletGetTransfers(core, &transfersCount);
+        defer { if let ptr = transfersPtr { wkMemoryFree (ptr) } }
         
-        let transfers: [BRCryptoTransfer] = transfersPtr?
-            .withMemoryRebound(to: BRCryptoTransfer.self, capacity: transfersCount) {
+        let transfers: [WKTransfer] = transfersPtr?
+            .withMemoryRebound(to: WKTransfer.self, capacity: transfersCount) {
                 Array(UnsafeBufferPointer (start: $0, count: transfersCount))
             } ?? []
         
@@ -166,15 +166,15 @@ public final class Wallet: Equatable {
             .first { $0.hash.map { $0 == hash } ?? false }
     }
 
-    internal func transferBy (core: BRCryptoTransfer) -> Transfer? {
-        return (CRYPTO_FALSE == cryptoWalletHasTransfer (self.core, core)
+    internal func transferBy (core: WKTransfer) -> Transfer? {
+        return (WK_FALSE == wkWalletHasTransfer (self.core, core)
             ? nil
             : Transfer (core: core,
                         wallet: self,
                         take: true))
     }
 
-    internal func transferByCoreOrCreate (_ core: BRCryptoTransfer,
+    internal func transferByCoreOrCreate (_ core: WKTransfer,
                                           create: Bool = false) -> Transfer? {
         return transferBy (core: core) ??
             (!create
@@ -197,29 +197,26 @@ public final class Wallet: Equatable {
     ///   - amount: The amount
     ///   - estimatedFeeBasis: The basis for 'fee'
     ///   - attributes: Optional transfer attributes.
-    ///   - exchangeId: Optional needed in swaps
     ///
     /// - Returns: A new transfer
     ///
     public func createTransfer (target: Address,
                                 amount: Amount,
                                 estimatedFeeBasis: TransferFeeBasis,
-                                attributes: Set<TransferAttribute>? = nil,
-                                exchangeId: String? = nil) -> Transfer? {
+                                attributes: Set<TransferAttribute>? = nil) -> Transfer? {
         if nil != attributes && nil != self.validateTransferAttributes(attributes!) {
             return nil
         }
 
         let coreAttributesCount = attributes?.count ?? 0
-        var coreAttributes: [BRCryptoTransferAttribute?] = attributes?.map { $0.core } ?? []
+        var coreAttributes: [WKTransferAttribute?] = attributes?.map { $0.core } ?? []
         
-        return cryptoWalletCreateTransfer (core,
+        return wkWalletCreateTransfer (core,
                                            target.core,
                                            amount.core,
                                            estimatedFeeBasis.core,
                                            coreAttributesCount,
-                                           &coreAttributes,
-                                           exchangeId)
+                                           &coreAttributes)
             .map { Transfer (core: $0,
                              wallet: self,
                              take: false)
@@ -238,7 +235,7 @@ public final class Wallet: Equatable {
         default:
             var coreOutputs = outputs.map { $0.core }
             
-            return cryptoWalletCreateTransferMultiple (core,
+            return wkWalletCreateTransferMultiple (core,
                                                        coreOutputsCount,
                                                        &coreOutputs,
                                                        estimatedFeeBasis.core)
@@ -251,7 +248,7 @@ public final class Wallet: Equatable {
 
     internal func createTransfer(sweeper: WalletSweeper,
                                  estimatedFeeBasis: TransferFeeBasis) -> Transfer? {
-        return cryptoWalletSweeperCreateTransferForWalletSweep(sweeper.core, manager.core, self.core, estimatedFeeBasis.core)
+        return wkWalletSweeperCreateTransferForWalletSweep(sweeper.core, manager.core, self.core, estimatedFeeBasis.core)
             .map { Transfer (core: $0,
                              wallet: self,
                              take: false)
@@ -260,7 +257,7 @@ public final class Wallet: Equatable {
 
     internal func createTransfer(request: PaymentProtocolRequest,
                                  estimatedFeeBasis: TransferFeeBasis) -> Transfer? {
-        return cryptoWalletCreateTransferForPaymentProtocolRequest(self.core, request.core, estimatedFeeBasis.core)
+        return wkWalletCreateTransferForPaymentProtocolRequest(self.core, request.core, estimatedFeeBasis.core)
             .map { Transfer (core: $0,
                              wallet: self,
                              take: false)
@@ -268,6 +265,38 @@ public final class Wallet: Equatable {
     }
     
     /// MARK: Estimate Limit
+
+    func hackTheAmountIfTezos (amount: Amount) -> Amount {
+        let network = self.manager.network
+        switch network.type {
+        case .xtz:
+            // See BRTezosOperation.c
+            let TEZOS_FEE_DEFAULT: Int64 = 0
+
+            let unitBase   = network.baseUnitFor(currency: amount.currency)!
+            let amountSlop = Amount.create (integer: 1 + TEZOS_FEE_DEFAULT, unit: unitBase)
+
+            //
+            // A Tezos fee estimation for an amount such that:
+            //     `(balance - TEZOS_FEE_DEFAULT) <= amount <= balance`
+            // will return "balance_too_low" but you can actually send a tranaction with roughly
+            //     `amount < (balance - 424)`
+            // where 424 is the fee for 1mutez (424 is typical)
+            //
+            // So, if asked to perform a fee estimate for an amount within TEZOS_FEE_DEFAULT of
+            // balance we'll instead use an amount of (balance - TEZOS_FEE_DEFAULT - 1).  Note: if
+            // balance < TEZOS_FEE_DEFAULT, we'll use an amout of 1.
+            //
+            return (self.balance > (amount + amountSlop)!
+                        ? amount
+                        : (self.balance > amountSlop
+                                ? (self.balance - amountSlop)!
+                                : Amount.create (integer: 1, unit: unitBase)))
+
+        default:
+            return amount
+        }
+    }
 
     ///
     /// A `Wallet.EstimateLimitHandler` is a function th handle the result of `Wallet.estimateLimit`
@@ -335,20 +364,20 @@ public final class Wallet: Equatable {
                                  fee: NetworkFee,
                                  attributes: Set<TransferAttribute>?,
                                  completion: @escaping Wallet.EstimateLimitHandler) {
-        var needFeeEstimate: BRCryptoBoolean = CRYPTO_TRUE
-        var isZeroIfInsuffientFunds: BRCryptoBoolean = CRYPTO_FALSE;
+        var needFeeEstimate: WKBoolean = WK_TRUE
+        var isZeroIfInsuffientFunds: WKBoolean = WK_FALSE;
 
         // This `amount` is in the `unit` of `wallet`
-        guard let amount = cryptoWalletManagerEstimateLimit (self.manager.core,
+        guard let amount = wkWalletManagerEstimateLimit (self.manager.core,
                                                              self.core,
-                                                             (asMaximum ? CRYPTO_TRUE : CRYPTO_FALSE),
+                                                             (asMaximum ? WK_TRUE : WK_FALSE),
                                                              target.core,
                                                              fee.core,
                                                              &needFeeEstimate,
                                                              &isZeroIfInsuffientFunds)
             .map ({ Amount (core: $0, take: false)})
             else {
-                // This is extraneous as `cryptoWalletEstimateLimit()` always returns an amount
+                // This is extraneous as `wkWalletEstimateLimit()` always returns an amount
                 estimateLimitCompleteInQueue (completion,
                                               Result.failure (LimitEstimationError.insufficientFunds))
                 return;
@@ -356,9 +385,9 @@ public final class Wallet: Equatable {
 
         // If we don't need an estimate, then we invoke `completion` and skip out immediately.  But
         // include a check on a zero amount - which indicates insufficient funds.
-        if CRYPTO_FALSE == needFeeEstimate {
+        if WK_FALSE == needFeeEstimate {
             estimateLimitCompleteInQueue (completion,
-                                          (CRYPTO_TRUE == isZeroIfInsuffientFunds && amount.isZero
+                                          (WK_TRUE == isZeroIfInsuffientFunds && amount.isZero
                                             ? Result.failure (LimitEstimationError.insufficientFunds)
                                             : Result.success (amount)))
             return
@@ -431,9 +460,53 @@ public final class Wallet: Equatable {
             return
         }
 
+        // The base unit for `currency`
+        let transferBaseUnit = self.manager.network.baseUnitFor(currency: self.currency)!
+
+        // The minimum non-zero transfer amount
+        let transferMin  = Amount.create (integer: 1, unit: transferBaseUnit)
+        let transferZero = Amount.create (integer: 0, unit: transferBaseUnit)
+
+        //
+        // We are forced to deal with XTZ.  Not by our choosing.  The value returned by the above
+        // `wkWalletManagerEstimateLimit()` is something well below `self.balance` for XTZ - becuase
+        // we are desperate to get a non-error response from the XTZ node.  And, if we provide the
+        // balance for the estimate, we get a `balance_too_low` error.  This then forces us into
+        // a binary search until 'not balance_too_low' which for a range of {0, 1 xtz} is ~25
+        // queries of Blockset and the XTZ Node.  Insane.  We will unfortunately sacrifice our
+        // User's funds until XTZ matures.
+        //
+        if (.xtz == manager.network.type) {
+            // Make a request with the lowest possible amount; hopefully we get a result.
+            estimateFee (target: target,
+                         amount: transferMin,
+                         fee: fee,
+                         attributes: attributes) { (res: Result<TransferFeeBasis, FeeEstimationError>) in
+                switch res {
+                case .success (let feeBasis):
+                    let amountEstimated = (self.balance - feeBasis.fee) ?? transferZero
+                    completion (Result.success (amountEstimated < amount
+                                                        ? amountEstimated
+                                                        : amount))
+
+                case .failure (_):
+                    //
+                    // The request failed but we don't know why (limits in the current interface).
+                    // Could be a network failure; could be something with the XTZ wallet; could
+                    // be a protocol change for XTZ - no matter, we'll return the maximum amount
+                    // as the balance.  If the user attempts to send the 'balance' it will fail
+                    // as there won't be enough for the fee.
+                    //
+                    completion (Result.success(amount))
+                }
+            }
+
+            return
+        }
+
         // If the `walletForFee` and `wallet` are identical, then we need to iteratively estimate
         // the fee and adjust the amount until the fee stabilizes.
-        var transferFee = Amount.create (integer: 0, unit: self.unit)
+        var transferFee = transferZero
 
         // We'll limit the number of iterations
         let estimationCompleterRecurseLimit = 3
@@ -459,7 +532,7 @@ public final class Wallet: Equatable {
                     guard let transactionAmount = newTransferAmount + newTransferFee
                         else { preconditionFailure() }
                     
-                    completion (self.balance >= transactionAmount
+                    completion (self.balance >= transactionAmount && newTransferAmount >= transferZero
                         ? Result.success (newTransferAmount)
                         : Result.failure (Wallet.LimitEstimationError.insufficientFunds))
 
@@ -481,7 +554,11 @@ public final class Wallet: Equatable {
             }
         }
 
-        estimateFee (target: target, amount: amount, fee: fee, attributes: attributes, completion: estimationCompleter)
+        estimateFee (target: target,
+                     amount: (manager.network.type == .xtz ? transferMin : amount),
+                     fee: fee,
+                     attributes: attributes,
+                     completion: estimationCompleter)
     }
 
     private func estimateLimitCompleteInQueue (_ completion: @escaping Wallet.EstimateLimitHandler,
@@ -495,11 +572,10 @@ public final class Wallet: Equatable {
         case serviceUnavailable
         case serviceError
         case insufficientFunds
-        case insufficientGas
 
-        static func fromStatus (_ status: BRCryptoStatus) -> LimitEstimationError {
+        static func fromStatus (_ status: WKStatus) -> LimitEstimationError {
             switch status {
-            case CRYPTO_ERROR_FAILED: return .serviceError
+            case WK_ERROR_FAILED: return .serviceError
             default: return .serviceError // preconditionFailure ("Unknown FeeEstimateError")
             }
         }
@@ -509,7 +585,6 @@ public final class Wallet: Equatable {
             case .ServiceUnavailable: return .serviceUnavailable
             case .ServiceError:       return .serviceError
             case .InsufficientFunds:  return .insufficientFunds
-            case .InsufficientGas:  return .insufficientGas
             }
         }
     }
@@ -521,13 +596,17 @@ public final class Wallet: Equatable {
     public typealias EstimateFeeHandler = (Result<TransferFeeBasis,FeeEstimationError>) -> Void
 
     ///
-    /// Estimate the fee for a transfer with `amount` from `wallet`.  If provided use the `feeBasis`
-    /// otherwise use the wallet's `defaultFeeBasis`
+    /// Estimate the `TransferFeeBasis` for a transfer with `amount` from `wallet`.  The result
+    /// will have margin applied if appropriate for the `target`.  Specifically, some targets for
+    /// some blockchains involve 'Smart Contracts' which may have some uncertainty in their 'cost
+    /// units'.  On a blockchain-specific basis a blockchain-specific amount of margin is added
+    /// to the 'cost units' - thereby ensuring high reliabitly in transfer submission.
     ///
     /// - Parameters:
     ///   - target: the transfer's target address
     ///   - amount: the transfer amount MUST BE GREATER THAN 0
     ///   - fee: the network fee (aka priority)
+    ///   - attributes: arbitrary, generally Network-specific, attributes
     ///   - completion: handler function
     ///
     public func estimateFee (target: Address,
@@ -540,14 +619,16 @@ public final class Wallet: Equatable {
         }
 
         let coreAttributesCount = attributes?.count ?? 0
-        var coreAttributes: [BRCryptoTransferAttribute?] = attributes?.map { $0.core } ?? []
-        
+        var coreAttributes: [WKTransferAttribute?] = attributes?.map { $0.core } ?? []
+
+        let amountHackedIfXTZ = hackTheAmountIfTezos(amount: amount)
+
         // 'Redirect' up to the 'manager'
-        cryptoWalletManagerEstimateFeeBasis (self.manager.core,
+        wkWalletManagerEstimateFeeBasis (self.manager.core,
                                              self.core,
                                              callbackCoordinator.addWalletFeeEstimateHandler(completion),
                                              target.core,
-                                             amount.core,
+                                             amountHackedIfXTZ.core,
                                              fee.core,
                                              coreAttributesCount,
                                              &coreAttributes)
@@ -556,7 +637,7 @@ public final class Wallet: Equatable {
     internal func estimateFee (sweeper: WalletSweeper,
                                fee: NetworkFee,
                                completion: @escaping EstimateFeeHandler) {
-        cryptoWalletManagerEstimateFeeBasisForWalletSweep (sweeper.core,
+        wkWalletManagerEstimateFeeBasisForWalletSweep (sweeper.core,
                                                            self.manager.core,
                                                            self.core,
                                                            callbackCoordinator.addWalletFeeEstimateHandler(completion),
@@ -566,7 +647,7 @@ public final class Wallet: Equatable {
     internal func estimateFee (request: PaymentProtocolRequest,
                                fee: NetworkFee,
                                completion: @escaping EstimateFeeHandler) {
-        cryptoWalletManagerEstimateFeeBasisForPaymentProtocolRequest (self.manager.core,
+        wkWalletManagerEstimateFeeBasisForPaymentProtocolRequest (self.manager.core,
                                                                       self.core,
                                                                       callbackCoordinator.addWalletFeeEstimateHandler(completion),
                                                                       request.core,
@@ -577,20 +658,17 @@ public final class Wallet: Equatable {
         case ServiceUnavailable
         case ServiceError
         case InsufficientFunds
-        case InsufficientGas
 
-        static func fromStatus (_ status: BRCryptoStatus) -> FeeEstimationError {
+        static func fromStatus (_ status: WKStatus) -> FeeEstimationError {
             switch status {
-            case CRYPTO_ERROR_FAILED: return .ServiceError
-            case CRYPTO_ERROR_FUNDS: return .InsufficientFunds
-            case CRYPTO_ERROR_GAS: return .InsufficientGas
+            case WK_ERROR_FAILED: return .ServiceError
             default: return .ServiceError // preconditionFailure ("Unknown FeeEstimateError")
             }
         }
     }
     
     internal func defaultFeeBasis () -> TransferFeeBasis? {
-        return cryptoWalletGetDefaultFeeBasis (core)
+        return wkWalletGetDefaultFeeBasis (core)
             .map { TransferFeeBasis (core: $0, take: false) }
     }
     
@@ -598,24 +676,24 @@ public final class Wallet: Equatable {
     /// Create a wallet
     ///
     /// - Parameters:
-    ///   - core: the BRCryptoWallet basis
+    ///   - core: the WKWallet basis
     ///   - listener: an optional listener
     ///   - manager: the manager
     ///   - take: a boolean to indicate if `core` needs to be taken (for reference counting)
     ///
-    internal init (core: BRCryptoWallet,
+    internal init (core: WKWallet,
                    manager: WalletManager,
                    callbackCoordinator: SystemCallbackCoordinator,
                    take: Bool) {
-        self.core = take ? cryptoWalletTake (core) : core
+        self.core = take ? wkWalletTake (core) : core
         self.manager = manager
         self.callbackCoordinator = callbackCoordinator
-        self.unit = Unit (core: cryptoWalletGetUnit(core), take: false)
-        self.unitForFee = Unit (core: cryptoWalletGetUnitForFee(core), take: false)
+        self.unit = Unit (core: wkWalletGetUnit(core), take: false)
+        self.unitForFee = Unit (core: wkWalletGetUnitForFee(core), take: false)
     }
 
     deinit {
-        cryptoWalletGive (core)
+        wkWalletGive (core)
     }
 
     // Equatable
@@ -668,10 +746,10 @@ public enum WalletState: Equatable {
     case created
     case deleted
 
-    internal init (core: BRCryptoWalletState) {
+    internal init (core: WKWalletState) {
         switch core {
-        case CRYPTO_WALLET_STATE_CREATED: self = .created
-        case CRYPTO_WALLET_STATE_DELETED: self = .deleted
+        case WK_WALLET_STATE_CREATED: self = .created
+        case WK_WALLET_STATE_DELETED: self = .deleted
         default: self = .created; preconditionFailure()
         }
     }
@@ -694,73 +772,73 @@ public enum WalletEvent {
     case feeBasisUpdated   (feeBasis: TransferFeeBasis)
     case feeBasisEstimated (feeBasis: TransferFeeBasis)
 
-    init? (wallet: Wallet, core: BRCryptoWalletEvent) {
-        switch cryptoWalletEventGetType(core) {
-        case CRYPTO_WALLET_EVENT_CREATED:
+    init? (wallet: Wallet, core: WKWalletEvent) {
+        switch wkWalletEventGetType(core) {
+        case WK_WALLET_EVENT_CREATED:
             self = .created
             
-        case CRYPTO_WALLET_EVENT_CHANGED:
-            var oldState: BRCryptoWalletState!
-            var newState: BRCryptoWalletState!
+        case WK_WALLET_EVENT_CHANGED:
+            var oldState: WKWalletState!
+            var newState: WKWalletState!
 
-            cryptoWalletEventExtractState(core, &oldState, &newState)
+            wkWalletEventExtractState(core, &oldState, &newState)
             self = .changed (oldState: WalletState (core: oldState),
                              newState: WalletState (core: newState))
             
-        case CRYPTO_WALLET_EVENT_DELETED:
+        case WK_WALLET_EVENT_DELETED:
             self = .deleted
             
-        case CRYPTO_WALLET_EVENT_TRANSFER_ADDED:
-            var transfer: BRCryptoTransfer!
+        case WK_WALLET_EVENT_TRANSFER_ADDED:
+            var transfer: WKTransfer!
 
-            cryptoWalletEventExtractTransfer (core, &transfer);
+            wkWalletEventExtractTransfer (core, &transfer);
             self = .transferAdded (transfer: Transfer (core: transfer,
                                                        wallet: wallet,
                                                        take: false))
             
-        case CRYPTO_WALLET_EVENT_TRANSFER_CHANGED:
-            var transfer: BRCryptoTransfer!
+        case WK_WALLET_EVENT_TRANSFER_CHANGED:
+            var transfer: WKTransfer!
 
-            cryptoWalletEventExtractTransfer (core, &transfer);
+            wkWalletEventExtractTransfer (core, &transfer);
             self = .transferChanged (transfer: Transfer (core: transfer,
                                                          wallet: wallet,
                                                          take: false))
             
-        case CRYPTO_WALLET_EVENT_TRANSFER_SUBMITTED:
-            var transfer: BRCryptoTransfer!
-            cryptoWalletEventExtractTransferSubmit (core, &transfer);
+        case WK_WALLET_EVENT_TRANSFER_SUBMITTED:
+            var transfer: WKTransfer!
+            wkWalletEventExtractTransferSubmit (core, &transfer);
 
             self = .transferSubmitted (transfer: Transfer (core: transfer,
                                                            wallet: wallet,
                                                            take: false),
                                        success: true);
             
-        case CRYPTO_WALLET_EVENT_TRANSFER_DELETED:
-            var transfer: BRCryptoTransfer!
+        case WK_WALLET_EVENT_TRANSFER_DELETED:
+            var transfer: WKTransfer!
 
-            cryptoWalletEventExtractTransfer (core, &transfer);
+            wkWalletEventExtractTransfer (core, &transfer);
             self = .transferDeleted (transfer: Transfer (core: transfer,
                                                          wallet: wallet,
                                                          take: false))
             
-        case CRYPTO_WALLET_EVENT_BALANCE_UPDATED:
-            var balance: BRCryptoAmount!
+        case WK_WALLET_EVENT_BALANCE_UPDATED:
+            var balance: WKAmount!
 
-            cryptoWalletEventExtractBalanceUpdate (core, &balance);
+            wkWalletEventExtractBalanceUpdate (core, &balance);
             self = .balanceUpdated (amount: Amount (core: balance, take: false))
             
-        case CRYPTO_WALLET_EVENT_FEE_BASIS_UPDATED:
-            var feeBasis: BRCryptoFeeBasis!
+        case WK_WALLET_EVENT_FEE_BASIS_UPDATED:
+            var feeBasis: WKFeeBasis!
 
-            cryptoWalletEventExtractFeeBasisUpdate (core, &feeBasis);
+            wkWalletEventExtractFeeBasisUpdate (core, &feeBasis);
 
             guard nil != feeBasis else { return nil }
             self = .feeBasisUpdated (feeBasis: TransferFeeBasis (core: feeBasis, take: false))
 
-        case CRYPTO_WALLET_EVENT_FEE_BASIS_ESTIMATED:
-            var feeBasis: BRCryptoFeeBasis!
+        case WK_WALLET_EVENT_FEE_BASIS_ESTIMATED:
+            var feeBasis: WKFeeBasis!
 
-            cryptoWalletEventExtractFeeBasisEstimate (core, nil, nil, &feeBasis);
+            wkWalletEventExtractFeeBasisEstimate (core, nil, nil, &feeBasis);
             
             guard nil != feeBasis else { return nil }
             self = .feeBasisEstimated (feeBasis: TransferFeeBasis (core: feeBasis, take: false))

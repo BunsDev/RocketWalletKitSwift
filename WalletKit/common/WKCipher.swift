@@ -1,5 +1,5 @@
 //
-//  BRCryptoEncryptor.swift
+//  WKCipher.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 7/18/19.
@@ -21,7 +21,7 @@ public final class CoreCipher: Cipher {
     public static func aes_ecb(key: Data) -> CoreCipher {
         return key.withUnsafeBytes { (keyBytes: UnsafeRawBufferPointer) -> CoreCipher in
             let keyAddr = keyBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
-            let core = cryptoCipherCreateForAESECB(keyAddr, keyBytes.count)!
+            let core = wkCipherCreateForAESECB(keyAddr, keyBytes.count)!
             return CoreCipher (core: core)
         }
     }
@@ -31,7 +31,7 @@ public final class CoreCipher: Cipher {
             let nonce12Addr  = nonce12Bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             return ad.withUnsafeBytes { (adBytes: UnsafeRawBufferPointer) -> CoreCipher in
                 let adAddr  = adBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
-                let core = cryptoCipherCreateForChacha20Poly1305(key.core,
+                let core = wkCipherCreateForChacha20Poly1305(key.core,
                                                                  nonce12Addr, nonce12Bytes.count,
                                                                  adAddr, adBytes.count)!
                 return CoreCipher (core: core)
@@ -42,7 +42,7 @@ public final class CoreCipher: Cipher {
     public static func pigeon(privKey: Key, pubKey: Key, nonce12: Data) -> CoreCipher {
         return nonce12.withUnsafeBytes { (nonce12Bytes: UnsafeRawBufferPointer) -> CoreCipher in
             let nonce12Addr  = nonce12Bytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
-            let core = cryptoCipherCreateForPigeon(privKey.core,
+            let core = wkCipherCreateForPigeon(privKey.core,
                                                    pubKey.core,
                                                    nonce12Addr, nonce12Bytes.count)!
             return CoreCipher (core: core)
@@ -50,11 +50,11 @@ public final class CoreCipher: Cipher {
     }
 
     // The Core representation
-    internal let core: BRCryptoCipher
+    internal let core: WKCipher
 
-    deinit { cryptoCipherGive (core) }
+    deinit { wkCipherGive (core) }
 
-    internal init (core: BRCryptoCipher) {
+    internal init (core: WKCipher) {
         self.core = core
     }
 
@@ -63,18 +63,18 @@ public final class CoreCipher: Cipher {
             let sourceAddr  = sourceBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             let sourceCount = sourceBytes.count
 
-            let targetCount = cryptoCipherEncryptLength(self.core, sourceAddr, sourceCount)
+            let targetCount = wkCipherEncryptLength(self.core, sourceAddr, sourceCount)
             guard targetCount != 0 else { return nil }
 
-            var result = CRYPTO_FALSE
+            var result = WK_FALSE
             var target = Data (count: targetCount)
             target.withUnsafeMutableBytes { (targetBytes: UnsafeMutableRawBufferPointer) -> Void in
                 let targetAddr  = targetBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
 
-                result = cryptoCipherEncrypt (self.core, targetAddr, targetCount, sourceAddr, sourceCount)
+                result = wkCipherEncrypt (self.core, targetAddr, targetCount, sourceAddr, sourceCount)
             }
 
-            return result == CRYPTO_TRUE ? target : nil
+            return result == WK_TRUE ? target : nil
         }
     }
 
@@ -83,18 +83,18 @@ public final class CoreCipher: Cipher {
             let sourceAddr  = sourceBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
             let sourceCount = sourceBytes.count
 
-            let targetCount = cryptoCipherDecryptLength(self.core, sourceAddr, sourceCount)
+            let targetCount = wkCipherDecryptLength(self.core, sourceAddr, sourceCount)
             guard targetCount != 0 else { return nil }
 
-            var result = CRYPTO_FALSE
+            var result = WK_FALSE
             var target = Data (count: targetCount)
             target.withUnsafeMutableBytes { (targetBytes: UnsafeMutableRawBufferPointer) -> Void in
                 let targetAddr  = targetBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
 
-                result = cryptoCipherDecrypt (self.core, targetAddr, targetCount, sourceAddr, sourceCount)
+                result = wkCipherDecrypt (self.core, targetAddr, targetCount, sourceAddr, sourceCount)
             }
 
-            return result == CRYPTO_TRUE ? target : nil
+            return result == WK_TRUE ? target : nil
         }
     }
 }

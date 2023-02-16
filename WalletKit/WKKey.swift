@@ -1,5 +1,5 @@
 //
-//  BRCryptoKey.swift
+//  WKKey.swift
 //  WalletKit
 //
 //  Created by Ed Gamble on 7/22/19.
@@ -19,7 +19,7 @@ public final class Key {
     /// must be BIP38 format.
     ///
     static public func isProtected(asPrivate string: String) -> Bool {
-        return CRYPTO_TRUE == cryptoKeyIsProtectedPrivate (string)
+        return WK_TRUE == wkKeyIsProtectedPrivate (string)
     }
 
     ///
@@ -33,15 +33,15 @@ public final class Key {
     ///
     static public func createFrom (phrase: String, words: [String]? = wordList) -> Key? {
         guard var words = words?.map ({ UnsafePointer<Int8> (strdup($0)) }) else { return nil }
-        defer { words.forEach { cryptoMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
+        defer { words.forEach { wkMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
 
-        return cryptoKeyCreateFromPhraseWithWords (phrase, &words)
+        return wkKeyCreateFromPhraseWithWords (phrase, &words)
             .map { Key (core: $0)}
     }
 
     ///
     /// Create `Key` from `string` using the passphrase to decrypt it. The string must be BIP38
-    /// format. Different crypto currencies have different implementations; this function will
+    /// format. Different cryptocurrencies have different implementations; this function will
     /// look for a valid string using BITCOIN mainnet and BITCOIN testnet.
     ///
     /// - Parameter string
@@ -50,14 +50,14 @@ public final class Key {
     /// - Returns: A Key if one exists
     ///
     static public func createFromString (asPrivate string: String, withPassphrase: String) -> Key? {
-        return cryptoKeyCreateFromStringProtectedPrivate (string, withPassphrase)
+        return wkKeyCreateFromStringProtectedPrivate (string, withPassphrase)
             .map { Key (core: $0) }
     }
 
     ///
     /// Create `Key` from `string`.  The string must be wallet import format (WIF), mini private
     /// key format, or hex string for example: 5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj
-    /// Different crypto currencies have different formats; this function will look for a valid
+    /// Different cryptocurrencies have different formats; this function will look for a valid
     /// string using BITCOIN mainnet and BITCOIN testnet.
     ///
     /// - Parameter string
@@ -65,7 +65,7 @@ public final class Key {
     /// - Returns: A Key if one exists
     ///
     static public func createFromString (asPrivate string: String) -> Key? {
-        return cryptoKeyCreateFromStringPrivate (string)
+        return wkKeyCreateFromStringPrivate (string)
             .map { Key (core: $0) }
     }
 
@@ -78,7 +78,7 @@ public final class Key {
     /// - Returns: A Key, if one exists
     ///
     static public func createFromString (asPublic string: String) -> Key? {
-        return cryptoKeyCreateFromStringPublic (string)
+        return wkKeyCreateFromStringPublic (string)
             .map { Key (core: $0) }
     }
 
@@ -89,44 +89,44 @@ public final class Key {
         return nonce.withUnsafeMutableBytes { (nonceBytes: UnsafeMutableRawBufferPointer) -> Key in
             let nonceAddr  = nonceBytes.baseAddress?.assumingMemoryBound(to: UInt8.self)
 
-            return cryptoKeyCreateForPigeon (key.core, nonceAddr, nonceCount)
+            return wkKeyCreateForPigeon (key.core, nonceAddr, nonceCount)
                 .map { Key (core: $0) }!
         }
     }
 
     static public func createForBIP32ApiAuth (phrase: String, words: [String]? = wordList) -> Key? {
         guard var words = words?.map ({ UnsafePointer<Int8> (strdup($0)) }) else { return nil }
-        defer { words.forEach { cryptoMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
+        defer { words.forEach { wkMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
 
-        return cryptoKeyCreateForBIP32ApiAuth (phrase, &words)
+        return wkKeyCreateForBIP32ApiAuth (phrase, &words)
             .map { Key (core: $0) }
     }
 
     static public func createForBIP32BitID (phrase: String, index: Int, uri:String, words: [String]? = wordList) -> Key? {
         guard var words = words?.map ({ UnsafePointer<Int8> (strdup($0)) }) else { return nil }
-        defer { words.forEach { cryptoMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
+        defer { words.forEach { wkMemoryFree (UnsafeMutablePointer (mutating: $0)) } }
 
-        return cryptoKeyCreateForBIP32BitID (phrase, Int32(index), uri, &words)
+        return wkKeyCreateForBIP32BitID (phrase, Int32(index), uri, &words)
             .map { Key (core: $0) }
     }
 
     // The Core representation
-    internal let core: BRCryptoKey
+    internal let core: WKKey
 
-    deinit { cryptoKeyGive (core) }
+    deinit { wkKeyGive (core) }
 
     public var hasSecret: Bool {
-        return 1 == cryptoKeyHasSecret  (self.core)
+        return 1 == wkKeyHasSecret  (self.core)
     }
 
     /// Return the WIF-encoded private key
     public var encodeAsPrivate: String {
-        return asUTF8String(cryptoKeyEncodePrivate(self.core), true)
+        return asUTF8String(wkKeyEncodePrivate(self.core), true)
     }
 
     /// Return the hex-encoded, DER-encoded public key
     public var encodeAsPublic: String {
-        return asUTF8String (cryptoKeyEncodePublic (self.core), true)
+        return asUTF8String (wkKeyEncodePublic (self.core), true)
     }
 
     public typealias Secret = (  // 32 bytes
@@ -136,7 +136,7 @@ public final class Key {
         UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
 
     public var secret: Secret {
-        return cryptoKeyGetSecret (self.core).data
+        return wkKeyGetSecret (self.core).data
     }
     
     ///
@@ -147,11 +147,11 @@ public final class Key {
     /// - Returns: If identical `true`; otherwise `false`
     ///
     public func publicKeyMatch (_ that: Key) -> Bool {
-        return 1 == cryptoKeyPublicMatch (core, that.core)
+        return 1 == wkKeyPublicMatch (core, that.core)
     }
 
     internal func privateKeyMatch (_ that: Key) -> Bool {
-        return 1 == cryptoKeySecretMatch (core, that.core)
+        return 1 == wkKeySecretMatch (core, that.core)
     }
 
     ///
@@ -160,9 +160,9 @@ public final class Key {
     ///
     /// - Parameter core: The Core representaion
     ///
-    internal init (core: BRCryptoKey) {
+    internal init (core: WKKey) {
         self.core = core
-        cryptoKeyProvidePublicKey (core, 0, 0)
+        wkKeyProvidePublicKey (core, 0, 0)
     }
 
     ///
@@ -171,6 +171,6 @@ public final class Key {
     /// - Parameter secret: the secret
     ///
     internal convenience init (secret: Secret) {
-        self.init (core: cryptoKeyCreateFromSecret (BRCryptoSecret.init(data: secret)))
+        self.init (core: wkKeyCreateFromSecret (WKSecret.init(data: secret)))
     }
 }

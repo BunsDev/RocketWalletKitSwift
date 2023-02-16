@@ -1,9 +1,9 @@
 //
-//  BRCryptoWalletTests.swift
+//  WKWalletTests.swift
 //  WalletKitTests
 //
 //  Created by Ed Gamble on 1/11/19.
-//  Copyright © 2019 Breadwallet AG. All rights reserved.
+//  Copyright © 2019 Breadwinner AG. All rights reserved.
 //
 //  See the LICENSE file at the project root for license information.
 //  See the CONTRIBUTORS file at the project root for a list of contributors.
@@ -12,7 +12,7 @@
 import XCTest
 @testable import WalletKit
 
-class BRCryptoWalletTests: BRCryptoSystemBaseTests {
+class WKWalletTests: WKSystemBaseTests {
 
     override func setUp() {
         super.setUp()
@@ -354,7 +354,7 @@ class BRCryptoWalletTests: BRCryptoSystemBaseTests {
         XCTAssertEqual (wallet.unit,       network.defaultUnitFor(currency: network.currency))
         XCTAssertEqual (wallet.unitForFee, network.defaultUnitFor(currency: network.currency))
         XCTAssertEqual (wallet.balance,        Amount.create(integer:  0, unit: wallet.unit))
-        XCTAssertEqual (wallet.balanceMinimum, Amount.create(integer: 20, unit: wallet.unit));
+        XCTAssertEqual (wallet.balanceMinimum, Amount.create(integer: 10, unit: wallet.unit));
         XCTAssertNil   (wallet.balanceMaximum)
         XCTAssertEqual (wallet.state, WalletState.created)
         XCTAssertEqual (wallet.target, wallet.targetForScheme(manager.addressScheme))
