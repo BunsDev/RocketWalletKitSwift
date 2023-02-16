@@ -1506,24 +1506,43 @@ extension System {
         return wkClientErrorCreateSubmission (submitErrorType, details)
     }
 
+//    internal static func makeClientErrorCore (_ error: SystemClientError) -> WKClientError {
+//        switch error {
+//        case .badRequest(let details):
+//            return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_REQUEST, details)
+//        case .permission:
+//            return wkClientErrorCreate (WK_CLIENT_ERROR_PERMISSION, nil)
+//        case .resource:
+//            return wkClientErrorCreate (WK_CLIENT_ERROR_RESOURCE, nil)
+//        case .badResponse(let details):
+//            return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_RESPONSE, details)
+//        case let .submission(error, details):
+//            return System.makeClientSubmitErrorCore (error, details: details)
+//        case .unavailable:
+//            return wkClientErrorCreate (WK_CLIENT_ERROR_UNAVAILABLE, nil)
+//        case .lostConnectivity:
+//            return wkClientErrorCreate(WK_CLIENT_ERROR_LOST_CONNECTIVITY, nil)
+//        }
+//    }
+    
     internal static func makeClientErrorCore (_ error: SystemClientError) -> WKClientError {
-        switch error {
-        case .badRequest(let details):
-            return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_REQUEST, details)
-        case .permission:
-            return wkClientErrorCreate (WK_CLIENT_ERROR_PERMISSION, nil)
-        case .resource:
-            return wkClientErrorCreate (WK_CLIENT_ERROR_RESOURCE, nil)
-        case .badResponse(let details):
-            return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_RESPONSE, details)
-        case let .submission(error, details):
-            return System.makeClientSubmitErrorCore (error, details: details)
-        case .unavailable:
-            return wkClientErrorCreate (WK_CLIENT_ERROR_UNAVAILABLE, nil)
-        case .lostConnectivity:
-            return wkClientErrorCreate(WK_CLIENT_ERROR_LOST_CONNECTIVITY, nil)
+            switch error {
+            case .url(let details):
+                return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_REQUEST, details)
+            case .submission:
+                return wkClientErrorCreate (WK_CLIENT_ERROR_SUBMISSION, nil)
+            case .response:
+                return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_RESPONSE, nil)
+            case .noData:
+                return wkClientErrorCreate (WK_CLIENT_ERROR_UNAVAILABLE, nil)
+            case .jsonParse:
+                return wkClientErrorCreate (WK_CLIENT_ERROR_PERMISSION, nil)
+            case .model:
+                return wkClientErrorCreate (WK_CLIENT_ERROR_RESOURCE, nil)
+            case .noEntity:
+                return wkClientErrorCreate(WK_CLIENT_ERROR_LOST_CONNECTIVITY, nil)
+            }
         }
-    }
 
     internal static func canonicalizeTransactions (_ transactions: [SystemClient.Transaction]) -> [SystemClient.Transaction] {
         var uids = Set<String>()

@@ -32,31 +32,58 @@ public enum SystemClientSubmissionError: Error {
     case unknown
 }
 
+//public enum WKSystemClientError: Error {
+//    /// The request itself was flawed.  For example, the URL could not be built.
+//    case badRequest (String)
+//
+//    /// The request was rejected w/ invalid permission.
+//    case permission
+//
+//    /// The request was rejected having exceeded a resource (rateLimit, dataLimit, etc)
+//    case resource
+//
+//    /// The response was flawed.  For example response data could not be parsed or was expected but
+//    /// was not provided.
+//    case badResponse (String)
+//
+//    /// The request and response succeeded, but the submission ultimately failed.  For example,
+//    /// the Client submitted a Transaction to the Ethereum network but the submission failed with
+//    /// 'gas_too_low'
+//    case submission (error: SystemClientSubmissionError, details: String)
+//
+//    /// The client is unavailable.
+//    case unavailable
+//
+//    /// The client cannot be reached as network connectivity has been lost
+//    case lostConnectivity
+//}
+
 public enum SystemClientError: Error {
-    /// The request itself was flawed.  For example, the URL could not be built.
-    case badRequest (String)
-
-    /// The request was rejected w/ invalid permission.
-    case permission
-
-    /// The request was rejected having exceeded a resource (rateLimit, dataLimit, etc)
-    case resource
-
-    /// The response was flawed.  For example response data could not be parsed or was expected but
-    /// was not provided.
-    case badResponse (String)
-
-    /// The request and response succeeded, but the submission ultimately failed.  For example,
-    /// the Client submitted a Transaction to the Ethereum network but the submission failed with
-    /// 'gas_too_low'
-    case submission (error: SystemClientSubmissionError, details: String)
-
-    /// The client is unavailable.
-    case unavailable
-
-    /// The client cannot be reached as network connectivity has been lost
-    case lostConnectivity
+    // HTTP URL build failed
+    case url (String)
+    
+    // HTTP submission error
+    case submission (Error)
+    
+    // HTTP response unexpected (typically not 200/OK).  Includes a triple of: status coce,
+    // an optional JSON dictionary and a boolean that is true if there was a parse error of the
+    // JSON diectionary.
+    case response (Int, [String:Any]?, Bool)
+    
+    // HTTP submission didn't error but returned no data
+    case noData
+    
+    // JSON parse failed, generically
+    case jsonParse (Error?)
+    
+    // Could not convert JSON -> T
+    case model (String)
+    
+    // JSON entity expected but not provided - e.g. requested a 'transferId' that doesn't exist.
+    case noEntity (id: String?)
+    
 }
+
 
 public protocol SystemClient {
 
