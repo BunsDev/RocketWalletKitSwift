@@ -1428,17 +1428,17 @@ extension System {
                     ($0.target.map { addresses.caseInsensitiveContains($0) } ?? false)
             }
             
-            if transaction.transfers.count > 2 { // Fees for smart contracts are paid by sender
-                var feeTransfer = transaction.transfers.filter {
-                    ("__fee__" == $0.target)
-                }
-                if feeTransfer.count != 0 {
-//                    transfers = feeTransfer + transfers
-                    for i in 0...(transfers.count - 1) {
-                        transfers[i].source = feeTransfer[0].source
-                    }
-                }
-            }
+//            if transaction.transfers.count > 2 { // Fees for smart contracts are paid by sender
+//                var feeTransfer = transaction.transfers.filter {
+//                    ("__fee__" == $0.target)
+//                }
+//                if feeTransfer.count != 0 {
+////                    transfers = feeTransfer + transfers
+//                    for i in 0...(transfers.count - 1) {
+//                        transfers[i].source = feeTransfer[0].source
+//                    }
+//                }
+//            }
 
             // Note for later: all transfers have a unique id
 
