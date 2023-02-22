@@ -1528,19 +1528,19 @@ extension System {
     internal static func makeClientErrorCore (_ error: SystemClientError) -> WKClientError {
             switch error {
             case .url(let details):
-                return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_REQUEST, details)
-            case .submission:
-                return wkClientErrorCreate (WK_CLIENT_ERROR_SUBMISSION, nil)
-            case .response:
-                return wkClientErrorCreate (WK_CLIENT_ERROR_BAD_RESPONSE, nil)
+                return wkClientErrorCreate (WK_CLIENT_ERROR_URL, details)
+            case .submission(let error):
+                return wkClientErrorCreate (WK_CLIENT_ERROR_SUBMISSION, error.localizedDescription)
+            case .response(let status, _, _):
+                return wkClientErrorCreate (WK_CLIENT_ERROR_RESPONSE, String(status))
             case .noData:
-                return wkClientErrorCreate (WK_CLIENT_ERROR_UNAVAILABLE, nil)
-            case .jsonParse:
-                return wkClientErrorCreate (WK_CLIENT_ERROR_PERMISSION, nil)
-            case .model:
-                return wkClientErrorCreate (WK_CLIENT_ERROR_RESOURCE, nil)
-            case .noEntity:
-                return wkClientErrorCreate(WK_CLIENT_ERROR_LOST_CONNECTIVITY, nil)
+                return wkClientErrorCreate (WK_CLIENT_ERROR_NO_DATA, nil)
+            case .jsonParse(let error):
+                return wkClientErrorCreate (WK_CLIENT_ERROR_JSON_PARSE, error?.localizedDescription)
+            case .model(let details):
+                return wkClientErrorCreate (WK_CLIENT_ERROR_MODEL, details)
+            case .noEntity(let details):
+                return wkClientErrorCreate(WK_CLIENT_ERROR_NO_ENTITY, details)
             }
         }
 
